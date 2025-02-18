@@ -1,0 +1,27 @@
+name: Daily Match Scraper
+
+on:
+  schedule:
+    - cron: '0 19 * * *'  # 10pm EAT
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Run scraper
+        run: npm run scrape
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }} 

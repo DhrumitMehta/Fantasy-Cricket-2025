@@ -1,0 +1,91 @@
+Player,Player ID,Country,Player Role,Role Detail,Birth Date,Birth Place,Height,Batting Style,Bowling Style,Team Name,Team ID
+Kiran Navgire,26143,India,Batter,Batsman,1994-09-18,"Pune, Maharashtra",--,Right Handed Bat,,UP Warriorz Women,66687
+Arushi Goel,40570,India,Batter,Batsman,1997-09-26,--,--,Right Handed Bat,Right-arm medium,UP Warriorz Women,66687
+Vrinda Dinesh,22211,India,Batter,Batsman,"February 03, 2001",--,--,Right Handed Bat,Right-arm legbreak,UP Warriorz Women,66687
+Grace Harris,11101,Australia,Batting Allrounder,Batting Allrounder,1993-09-18,--,--,Right Handed Bat,Right-arm offbreak,UP Warriorz Women,66687
+Chamari Athapaththu,9149,Sri Lanka,Batting Allrounder,Batting Allrounder,1990-02-09,Gokarella,--,Left Handed Bat,Right-arm offbreak,UP Warriorz Women,66687
+Shweta Sehrawat,36620,India,Batting Allrounder,Batting Allrounder,2004-02-26,--,--,Right Handed Bat,Right-arm offbreak,UP Warriorz Women,66687
+Deepti Sharma,11098,India,Batting Allrounder,Batting Allrounder,1997-08-24,"Agra, Uttar Pradesh",--,Left Handed Bat,Right-arm offbreak,UP Warriorz Women,66687
+Tahlia McGrath,11956,Australia,Batting Allrounder,Batting Allrounder,1995-11-10,--,--,Right Handed Bat,Right-arm medium,UP Warriorz Women,66687
+Chinelle Henry,9993,West Indies,Batting Allrounder,Batting Allrounder,1995-08-17,--,--,Right Handed Bat,Right-arm fast-medium,UP Warriorz Women,66687
+Kranti Goud,1448841,India,Bowling Allrounder,Bowling Allrounder,2003-08-11,--,20,Right Handed Bat,Right-arm fast,UP Warriorz Women,66687
+Poonam Khemnar,40871,India,Bowling Allrounder,Bowling Allrounder,1994-09-05,--,--,Right Handed Bat,Right-arm legbreak,UP Warriorz Women,66687
+Saima Thakor,13960,India,Bowling Allrounder,Bowling Allrounder,1996-09-13,"Mumbai, Maharashtra",--,Right Handed Bat,Right-arm fast-medium,UP Warriorz Women,66687
+Uma Chetry,40584,India,WK-Batter,WK-Batsman,2002-07-27,--,--,Right Handed Bat,,UP Warriorz Women,66687
+Sophie Ecclestone,11531,England,Bowler,Bowler,1999-05-06,"Chester, Cheshire",--,Right Handed Bat,Left-arm orthodox,UP Warriorz Women,66687
+Alana King,12002,Australia,Bowler,Bowler,1995-11-22,--,--,Right Handed Bat,Right-arm legbreak,UP Warriorz Women,66687
+Anjali Sarvani,16199,India,Bowler,Bowler,"July 28, 1997","Kurnool, Andhra Pradesh",--,Left Handed Bat,Left-arm medium,UP Warriorz Women,66687
+Gouher Sultana,9079,India,Bowler,Bowler,1988-03-31,"Hyderabad, Andhra Pradesh",--,Right Handed Bat,Left-arm orthodox,UP Warriorz Women,66687
+Rajeshwari Gayakwad,11094,India,Bowler,Bowler,1991-06-01,"Bijapur, Karnataka",--,Right Handed Bat,Left-arm orthodox,UP Warriorz Women,66687
+Meg Lanning,9114,Australia,Batter,Batsman,1992-03-25,Singapore,--,Right Handed Bat,Right-arm medium,Delhi Capitals Women,66690
+Jemimah Rodrigues,13517,India,Batter,Batsman,2000-09-05,"Bhandup, Mumbai",--,Right Handed Bat,Right-arm offbreak,Delhi Capitals Women,66690
+Alice Capsey,19417,England,Batter,Batsman,2004-08-11,--,--,Right Handed Bat,Right-arm offbreak,Delhi Capitals Women,66690
+Sneha Deepthi,39433,India,Batting Allrounder,Batting Allrounder,1996-09-10,"Visakhapatnam, Andhra Pradesh",--,Right Handed Bat,Right-arm offbreak,Delhi Capitals Women,66690
+Shafali Verma,14825,India,Batting Allrounder,Batting Allrounder,2004-01-28,"Rohtak, Haryana",--,Right Handed Bat,Right-arm offbreak,Delhi Capitals Women,66690
+Minnu Mani,14486,India,Batting Allrounder,Batting Allrounder,1999-03-24,"Wayanad, Kerala",--,Left Handed Bat,Right-arm offbreak,Delhi Capitals Women,66690
+Niki Prasad,40773,India,Batting Allrounder,Batting Allrounder,2005-10-25,--,--,Right Handed Bat,Right-arm offbreak,Delhi Capitals Women,66690
+Marizanne Kapp,9182,South Africa,Bowling Allrounder,Bowling Allrounder,1990-01-04,"Port Elizabeth, Cape Province",--,Right Handed Bat,Right-arm medium,Delhi Capitals Women,66690
+Annabel Sutherland,12211,Australia,Bowling Allrounder,Bowling Allrounder,2001-10-12,--,--,Right Handed Bat,Right-arm fast-medium,Delhi Capitals Women,66690
+Shikha Pandey,10015,India,Bowling Allrounder,Bowling Allrounder,1989-05-12,"Karimnagar, Telengana",--,Right Handed Bat,Right-arm medium,Delhi Capitals Women,66690
+Nandini Kashyap,40605,India,WK-Batter,WK-Batsman,2003-09-13,"Dehradun, Uttarakhand",--,Right Handed Bat,,Delhi Capitals Women,66690
+Sarah Bryce,12293,Scotland,WK-Batter,WK-Batsman,2000-01-08,Edinburgh,--,Right Handed Bat,,Delhi Capitals Women,66690
+Taniya Bhatia,13519,India,WK-Batter,WK-Batsman,1997-11-28,"Chandigarh, Punjab",--,Right Handed Bat,,Delhi Capitals Women,66690
+Nallapureddy Charani,41078,India,Bowler,Bowler,2004-08-04,--,--,Left Handed Bat,Left-arm orthodox,Delhi Capitals Women,66690
+Arundhati Reddy,13661,India,Bowler,Bowler,1997-04-10,--,--,Right Handed Bat,Right-arm fast-medium,Delhi Capitals Women,66690
+Jess Jonassen,9537,Australia,Bowler,Bowler,1992-11-05,"Emerald, Queensland",--,Left Handed Bat,Left-arm orthodox,Delhi Capitals Women,66690
+Radha Yadav,13533,India,Bowler,Bowler,2000-04-21,"Mumbai, Maharashtra",--,Right Handed Bat,Left-arm orthodox,Delhi Capitals Women,66690
+Titas Sadhu,36650,India,Bowler,Bowler,2004-09-29,"Chinsura, West Bengal",--,Right Handed Bat,Right-arm medium,Delhi Capitals Women,66690
+Harmanpreet Kaur,9082,India,Batting Allrounder,Batting Allrounder,"March 08, 1989",Punjab,--,Right Handed Bat,Right-arm offbreak,Mumbai Indians Women,66696
+Keerthana Balakrishnan,14492,India,Batting Allrounder,Batting Allrounder,2000-08-10,"Chennai, Tamil Nadu",--,Right Handed Bat,Right-arm legbreak,Mumbai Indians Women,66696
+Hayley Matthews,11256,West Indies,Batting Allrounder,Batting Allrounder,"March 19, 1998",--,--,Right Handed Bat,Right-arm offbreak,Mumbai Indians Women,66696
+Sajeevan Sajana,13950,India,Batting Allrounder,Batting Allrounder,1995-04-01,"Mananthavadi, Wayanad, Kerala",--,Right Handed Bat,Right-arm offbreak,Mumbai Indians Women,66696
+Nadine de Klerk,12752,South Africa,Batting Allrounder,Batting Allrounder,2000-01-16,--,--,Right Handed Bat,Right-arm medium,Mumbai Indians Women,66696
+Sanskriti Gupta,1448845,India,Batting Allrounder,Batting Allrounder,2004-12-02,--,20,Left Handed Bat,Right-arm offbreak,Mumbai Indians Women,66696
+Amanjot Kaur,22226,India,Bowling Allrounder,Bowling Allrounder,2000-08-25,--,--,Right Handed Bat,Right-arm fast-medium,Mumbai Indians Women,66696
+Amelia Kerr,11855,New Zealand,Bowling Allrounder,Bowling Allrounder,2000-10-13,Wellington,--,Right Handed Bat,Right-arm legbreak,Mumbai Indians Women,66696
+Pooja Vastrakar,13518,India,Bowling Allrounder,Bowling Allrounder,1999-09-25,"Bilaspur, Madhya Pradesh",--,Right Handed Bat,Right-arm medium,Mumbai Indians Women,66696
+Chloe Tryon,9192,South Africa,Bowling Allrounder,Bowling Allrounder,1994-01-25,"Kingsway, Durban",--,Right Handed Bat,Left-arm orthodox,Mumbai Indians Women,66696
+Akshita Maheshwari,1448949,India,Bowling Allrounder,Bowling Allrounder,2000-10-10,--,20,Right Handed Bat,Right-arm fast-medium,Mumbai Indians Women,66696
+Nat Sciver-Brunt,9419,England,Bowling Allrounder,Bowling Allrounder,1992-08-20,Tokyo,--,Right Handed Bat,Right-arm medium,Mumbai Indians Women,66696
+Amandeep Kaur,52939,India,Bowling Allrounder,Bowling Allrounder,2003-03-02,--,--,Right Handed Bat,Left-arm orthodox,Mumbai Indians Women,66696
+G Kamalini,1448805,Unknown,WK-Batter,,,,,,,Mumbai Indians Women,66696
+Yastika Bhatia,16209,India,WK-Batter,WK-Batsman,2000-11-01,"Baroda (now Vadodara), Gujarat",--,Left Handed Bat,Left-arm orthodox,Mumbai Indians Women,66696
+Jintimani Kalita,40640,India,Bowler,Bowler,"December 25, 2003",--,--,Left Handed Bat,Right-arm fast-medium,Mumbai Indians Women,66696
+Saika Ishaque,22241,India,Bowler,Bowler,1995-10-08,"Calcutta (now Kolkata), Bengal",--,Left Handed Bat,Left-arm orthodox,Mumbai Indians Women,66696
+Shabnim Ismail,9189,South Africa,Bowler,Bowler,1988-10-05,"Cape Town, Cape Province",--,Left Handed Bat,Right-arm fast-medium,Mumbai Indians Women,66696
+Smriti Mandhana,10012,India,Batter,Batsman,1996-07-18,"Bombay (now Mumbai), Maharashtra",--,Left Handed Bat,Right-arm medium,Royal Challengers Bengaluru Women,66699
+Danielle Wyatt-Hodge,9140,England,Batter,Batsman,1991-04-22,"Stoke-on-Trent, Staffordshire",--,Right Handed Bat,Right-arm offbreak,Royal Challengers Bengaluru Women,66699
+Raghvi Bist,40693,India,Batting Allrounder,Batting Allrounder,2004-10-11,--,--,Right Handed Bat,Right-arm medium,Royal Challengers Bengaluru Women,66699
+Sabbhineni Meghana,11886,India,Batting Allrounder,Batting Allrounder,1996-06-07,"Krishna, Andhra Pradesh",--,Right Handed Bat,Right-arm offbreak,Royal Challengers Bengaluru Women,66699
+Kanika Ahuja,22236,India,Batting Allrounder,Batting Allrounder,2002-08-07,"Patiala, Punjab",--,Left Handed Bat,Right-arm offbreak,Royal Challengers Bengaluru Women,66699
+Ellyse Perry,9115,Australia,Batting Allrounder,Batting Allrounder,1990-11-03,"Wahroonga, Sydney, New South Wales",--,Right Handed Bat,Right-arm fast-medium,Royal Challengers Bengaluru Women,66699
+Sophie Molineux,12011,Australia,Bowling Allrounder,Bowling Allrounder,1998-01-17,--,--,Left Handed Bat,Left-arm orthodox,Royal Challengers Bengaluru Women,66699
+Asha Sobhana,41186,India,Bowling Allrounder,Bowling Allrounder,1991-03-16,"Trivandrum, Kerala",--,Right Handed Bat,Right-arm legbreak,Royal Challengers Bengaluru Women,66699
+Georgia Wareham,12015,Australia,Bowling Allrounder,Bowling Allrounder,1999-05-26,--,--,Right Handed Bat,Right-arm legbreak,Royal Challengers Bengaluru Women,66699
+Joshitha V J,1448865,India,Bowling Allrounder,Bowling Allrounder,2006-07-24,--,20,Right Handed Bat,Right-arm fast-medium,Royal Challengers Bengaluru Women,66699
+Prema Rawat,53030,India,Bowling Allrounder,Bowling Allrounder,2001-11-12,--,--,Right Handed Bat,Right-arm legbreak,Royal Challengers Bengaluru Women,66699
+Shreyanka Patil,35101,Unknown,Bowling Allrounder,,,,,,,Royal Challengers Bengaluru Women,66699
+Heather Graham,12008,Australia,Bowling Allrounder,Bowling Allrounder,1996-10-05,"Subiaco, Western Australia",--,Right Handed Bat,Right-arm medium,Royal Challengers Bengaluru Women,66699
+Richa Ghosh,16208,India,WK-Batter,WK-Batsman,"September 28, 2003","Siliguri, West Bengal",--,Right Handed Bat,Right-arm medium,Royal Challengers Bengaluru Women,66699
+Ekta Bisht,9080,India,Bowler,Bowler,"February 08, 1986","Almora, Uttarakhand",--,Left Handed Bat,Left-arm orthodox,Royal Challengers Bengaluru Women,66699
+Renuka Thakur Singh,14491,India,Bowler,Bowler,1996-02-01,"Shimla, Himachal Pradesh",--,Right Handed Bat,Right-arm fast-medium,Royal Challengers Bengaluru Women,66699
+Jagravi Pawar,40815,India,Bowler,Bowler,1999-12-13,"Mumbai, Maharahstra",--,Right Handed Bat,Right-arm offbreak,Royal Challengers Bengaluru Women,66699
+Kim Garth,9476,Australia,Bowler,Bowler,"April 25, 1996",Dublin,--,Right Handed Bat,Right-arm fast-medium,Royal Challengers Bengaluru Women,66699
+Laura Wolvaardt,11374,South Africa,Batter,Batsman,1999-04-26,"Milnerton, Cape Town",--,Right Handed Bat,,Gujarat Giants Women,66705
+Simran Shaikh,35157,India,Batter,Batsman,2002-01-12,"Mumbai, Maharashtra",--,Right Handed Bat,Right-arm legbreak,Gujarat Giants Women,66705
+Bharti Fulmali,52925,India,Batter,Batsman,1994-10-11,"Amravati, Maharashtra",--,Right Handed Bat,Right-arm fast-medium,Gujarat Giants Women,66705
+Phoebe Litchfield,15636,Australia,Batter,Batsman,2003-04-18,--,--,Left Handed Bat,Right-arm legbreak,Gujarat Giants Women,66705
+Dayalan Hemalatha,13639,India,Batter,Batsman,1994-09-29,"Madras, Tamil Nadu",--,Right Handed Bat,Right-arm offbreak,Gujarat Giants Women,66705
+Ashleigh Gardner,11989,Australia,Batting Allrounder,Batting Allrounder,1997-04-15,"Bankstown, Sydney, New South Wales",--,Right Handed Bat,Right-arm offbreak,Gujarat Giants Women,66705
+Kashvee Gautam,18543,India,Batting Allrounder,Batting Allrounder,2003-04-18,"Chandigarh, Punjab",--,Right Handed Bat,Right-arm fast-medium,Gujarat Giants Women,66705
+Deandra Dottin,9089,West Indies,Batting Allrounder,Batting Allrounder,1991-06-21,Barbados,--,Right Handed Bat,Right-arm fast-medium,Gujarat Giants Women,66705
+Harleen Deol,13658,India,Batting Allrounder,Batting Allrounder,1998-06-21,"Chandigarh, Punjab",--,Right Handed Bat,Right-arm offbreak,Gujarat Giants Women,66705
+Meghna Singh,11917,India,Bowling Allrounder,Bowling Allrounder,1994-06-18,"Bijnor, Uttar Pradesh",--,Right Handed Bat,Right-arm fast-medium,Gujarat Giants Women,66705
+Mannat Kashyap,36641,India,Bowling Allrounder,Bowling Allrounder,2003-12-15,Patiala,--,Right Handed Bat,Left-arm orthodox,Gujarat Giants Women,66705
+Danielle Gibson,13034,England,Bowling Allrounder,Bowling Allrounder,2001-04-30,"Cheltenham, Gloucestershire",--,Right Handed Bat,Right-arm medium,Gujarat Giants Women,66705
+Sayali Satghare,40826,India,Bowling Allrounder,Bowling Allrounder,2000-02-07,--,--,Right Handed Bat,Right-arm fast-medium,Gujarat Giants Women,66705
+Beth Mooney,9989,Australia,WK-Batter,WK-Batsman,1994-01-14,"Shepparton, Victoria",--,Left Handed Bat,,Gujarat Giants Women,66705
+Shabnam Md Shakil,36655,India,Bowler,Bowler,2007-06-17,"Vishakapatanam, Andhra Pradesh",--,Right Handed Bat,Right-arm medium,Gujarat Giants Women,66705
+Priya Mishra,41085,India,Bowler,Bowler,2004-06-04,--,--,Right Handed Bat,Right-arm legbreak,Gujarat Giants Women,66705
+Prakashika Naik,40812,India,Bowler,Bowler,1997-10-29,--,--,Right Handed Bat,Right-arm legbreak,Gujarat Giants Women,66705
+Tanuja Kanwar,13649,India,Bowler,Bowler,1998-01-28,"Shimla, Himachal Pradesh",--,Left Handed Bat,Left-arm orthodox,Gujarat Giants Women,66705
