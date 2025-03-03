@@ -1,62 +1,88 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { format } from 'date-fns';
+"use client";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from "@/utils/supabaseClient";
+import { useEffect, useState } from "react";
+
+type PlayerPoints = {
+  id: string;
+  player_name: string;
+  team: string;
+  batting_points: number;
+  bowling_points: number;
+  fielding_points: number;  
+  potm_points: number;
+  total_points: number;     
+  match_id?: string;
+};
 
 export default function Points() {
-    const [teamPoints, setTeamPoints] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+  const [playerPoints, setPlayerPoints] = useState<PlayerPoints[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchPoints = async () => {
-            try {
-                const { data: matches, error } = await supabase
-                    .from('matches')
-                    .select(`
-                        id,
-                        match_date,
-                        teams,
-                        player_points (
-                            player_name,
-                            team,
-                            batting_points,
-                            bowling_points,
-                            fielding_points,
-                            potm_points,
-                            total_points
-                        )
-                    `)
-                    .order('match_date', { ascending: false });
+  useEffect(() => {
+    async function fetchPlayerPoints() {
+      try {
+        const { data, error } = await supabase
+          .from("player_points")
+          .select("*")
+          .order("total_points", { ascending: false });
 
-                if (error) throw error;
+        if (error) {
+          console.error("Supabase error:", error);
+          setError(error.message);
+        } else {
+          setPlayerPoints(data || []);
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      } finally {
+        setLoading(false);
+      }
+    }
 
-                setTeamPoints(matches.map(match => ({
-                    matchId: match.id,
-                    date: match.match_date,
-                    totalPoints: match.player_points.reduce((sum, p) => sum + p.total_points, 0),
-                    players: match.player_points
-                })));
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to load points');
-            } finally {
-                setLoading(false);
-            }
-        };
+    fetchPlayerPoints();
+  }, []);
 
-        fetchPoints();
-    }, []);
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Player Points</h1>
 
-    return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold">Points</h1>
-        <p>This page will display fantasy points for the current matchday.</p>
-      </div>
-    );
-  }
-  
+      {loading ? (
+        <p>Loading player points...</p>
+      ) : error ? (
+        <div className="text-red-500">Error: {error}</div>
+      ) : (
+        <table className="min-w-full border-collapse border border-gray-300">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border border-gray-300 p-2">Player Name</th>
+              <th className="border border-gray-300 p-2">Team</th>
+              <th className="border border-gray-300 p-2">Batting Points</th>
+              <th className="border border-gray-300 p-2">Bowling Points</th>
+              <th className="border border-gray-300 p-2">Fielding Points</th>
+              <th className="border border-gray-300 p-2">POTM Points</th>
+              <th className="border border-gray-300 p-2">Total Points</th>
+              <th className="border border-gray-300 p-2">Match ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            {playerPoints.map((player) => (
+              <tr key={player.id} className="border border-gray-300">
+                <td className="border border-gray-300 p-2">{player.player_name}</td>
+                <td className="border border-gray-300 p-2">{player.team}</td>
+                <td className="border border-gray-300 p-2">{player.batting_points}</td>
+                <td className="border border-gray-300 p-2">{player.bowling_points}</td>
+                <td className="border border-gray-300 p-2">{player.fielding_points}</td>
+                <td className="border border-gray-300 p-2">{player.potm_points}</td>
+                <td className="border border-gray-300 p-2 font-bold">{player.total_points}</td>
+                <td className="border border-gray-300 p-2">{player.match_id}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}

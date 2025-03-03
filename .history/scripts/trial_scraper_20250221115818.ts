@@ -1,0 +1,728 @@
+import { createClient } from '@supabase/supabase-js';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import dotenv from 'dotenv';
+import { promises as fs } from 'fs';
+import fetch from 'node-fetch';
+
+// Load environment variables first
+dotenv.config();
+
+// Add console.log to debug environment variables
+console.log('Environment variables:', {
+  supabaseUrl: process.env.SUPABASE_URL,
+  // Don't log the full service key for security
+  hasServiceKey: !!process.env.SUPABASE_SERVICE_KEY
+});
+
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+  throw new Error('Missing required environment variables SUPABASE_URL or SUPABASE_SERVICE_KEY');
+}
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
+
+interface Match {
+  id: string;
+  teams: string[];
+  date: Date;
+  venue: string;
+  result?: string;
+  scorecard_url: string;
+}
+
+interface PlayerPoints {
+  match_id: string;
+  player_id: string;
+  batting_points: number;
+  bowling_points: number;
+  fielding_points: number;
+  potm_points: number;
+}
+
+// Add these headers to both scraping functions
+const headers = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.5',
+  'Connection': 'keep-alive',
+};
+
+// Configure axios with retries
+const axiosInstance = axios.create();
+axiosInstance.interceptors.response.use(undefined, async (err) => {
+  const { config, message } = err;
+  if (!config || !config.retry) {
+    return Promise.reject(err);
+  }
+  config.retry -= 1;
+  const backoff = new Promise(resolve => setTimeout(resolve, config.retryDelay || 1000));
+  await backoff;
+  return axiosInstance(config);
+});
+
+interface PlayerData {
+  playerId: string;
+  // Batting stats
+  runs: number;
+  balls: number;
+  fours: number;
+  sixes: number;
+  strikeRate: number;
+  // Bowling stats
+  overs: number;
+  maidens: number;
+  wickets: number;
+  noBalls: number;
+  wides: number;
+  economy: number;
+  runsConceded: number;
+  dotBalls: number;
+  // Fielding stats
+  catches: number;
+  stumpings: number;
+  runOuts: number;
+}
+
+function createPlayerData(playerId: string): PlayerData {
+  return {
+    playerId,
+    // Initialize all stats with 0
+    runs: 0,
+    balls: 0,
+    fours: 0,
+    sixes: 0,
+    strikeRate: 0,
+    overs: 0,
+    maidens: 0,
+    wickets: 0,
+    noBalls: 0,
+    wides: 0,
+    economy: 0,
+    runsConceded: 0,
+    dotBalls: 0,
+    catches: 0,
+    stumpings: 0,
+    runOuts: 0
+  };
+}
+
+async function fetchWithRetry(url: string, maxRetries = 5, initialDelay = 1000): Promise<string> {
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.5',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+    'Cache-Control': 'max-age=0',
+    'Host': 'www.cricbuzz.com'
+  };
+
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const delay = initialDelay * Math.pow(2, i); // Exponential backoff
+      if (i > 0) {
+        console.log(`Retry attempt ${i + 1} for ${url} after ${delay}ms delay`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+
+      const response = await fetch(url, { headers });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const text = await response.text();
+      if (!text) {
+        throw new Error('Empty response received');
+      }
+
+      return text;
+    } catch (error: any) {
+      lastError = error;
+      console.error(`Attempt ${i + 1} failed:`, error.message);
+      
+      // If it's a DNS error, try with IP address as fallback
+      if (error.code === 'ENOTFOUND') {
+        try {
+          const altUrl = url.replace('www.cricbuzz.com', '13.234.66.76');
+          console.log(`Trying alternate URL: ${altUrl}`);
+          const response = await fetch(altUrl, { headers });
+          if (response.ok) {
+            return await response.text();
+          }
+        } catch (altError: any) {
+          console.error('Alternate URL failed:', altError.message);
+        }
+      }
+    }
+  }
+
+  throw lastError || new Error(`Failed to fetch ${url} after ${maxRetries} attempts`);
+}
+
+async function getBowlerDotBalls(matchId: string, playerId: string, inningsNo: string): Promise<number> {
+  try {
+    const url = `https://www.cricbuzz.com/player-match-highlights/${matchId}/${inningsNo}/${playerId}/bowling`;
+    console.log(`Fetching dot balls from: ${url}`);
+    
+    const html = await fetchWithRetry(url);
+    const $ = cheerio.load(html);
+    
+    let dotBallCount = 0;
+    
+    // Process each ball commentary
+    $('.cb-com-ln').each((index, elem) => {
+      const commentary = $(elem).text().trim();
+      
+      // Split the commentary at the first comma
+      const [before, afterComma] = commentary.split(',');
+      
+      if (afterComma) {
+        const nextWords = afterComma.trim().toLowerCase();
+        // Check for dot ball conditions
+        if (
+          nextWords.startsWith('no run') ||
+          nextWords.startsWith('out') ||
+          nextWords.startsWith('byes') ||
+          nextWords.startsWith('leg byes')
+        ) {
+          dotBallCount++;
+          console.log(`Found dot ball: "${commentary}"`);
+        }
+      }
+    });
+    
+    console.log(`Found ${dotBallCount} dot balls for player ${playerId}`);
+    return dotBallCount;
+  } catch (error) {
+    console.error(`Error fetching dot balls for player ${playerId}:`, error);
+    return 0;
+  }
+}
+
+async function parseScorecard(matchId: string): Promise<{
+  battingData: PlayerData[],
+  bowlingData: PlayerData[],
+  fieldingData: PlayerData[],
+  dnbData: PlayerData[]
+}> {
+  try {
+    const $ = cheerio.load(await fetchWithRetry(`https://www.cricbuzz.com/api/html/cricket-scorecard/${matchId}`));
+    
+    const battingData: PlayerData[] = [];
+    const bowlingData: PlayerData[] = [];
+    const fieldingData: PlayerData[] = [];
+    const dnbData: PlayerData[] = [];
+    let currentInnings = 0;
+
+    // Process each innings
+    $('.cb-col.cb-col-100.cb-ltst-wgt-hdr').each((_, inningsElem) => {
+      const inningsText = $(inningsElem).text();
+      
+      // Process batting data
+      if (inningsText.includes('Batter') || inningsText.includes('Batsman')) {
+        currentInnings++;
+
+        $(inningsElem).find('.cb-col.cb-col-100.cb-scrd-itms').each((_, row) => {
+          const cols = $(row).find('.cb-col');
+          if (cols.length >= 7) {
+            const playerLink = cols.eq(0).find('a').attr('href');
+            if (!playerLink) return;
+            
+            const playerId = playerLink.split('/')[2];
+            const runs = parseInt(cols.eq(2).text().trim()) || 0;
+            const balls = parseInt(cols.eq(3).text().trim()) || 0;
+            const fours = parseInt(cols.eq(4).text().trim()) || 0;
+            const sixes = parseInt(cols.eq(5).text().trim()) || 0;
+            const strikeRate = parseFloat(cols.eq(6).text().trim()) || 0;
+
+            let player = battingData.find(p => p.playerId === playerId);
+
+            if (player) {
+              player.runs = runs;
+              player.balls = balls;
+              player.fours = fours;
+              player.sixes = sixes;
+              player.strikeRate = strikeRate;
+            } else {
+              player = createPlayerData(playerId);
+              player.runs = runs;
+              player.balls = balls;
+              player.fours = fours;
+              player.sixes = sixes;
+              player.strikeRate = strikeRate;
+              battingData.push(player);
+            }
+          }
+        });
+      }
+
+      // Process bowling data
+      if ($(inningsElem).find('.cb-scrd-sub-hdr').text().includes('Bowler')) {
+        $(inningsElem).find('.cb-col.cb-col-100.cb-scrd-itms').each((_, row) => {
+          const cols = $(row).find('.cb-col');
+          if (cols.length >= 8) {
+            const playerLink = cols.eq(0).find('a').attr('href');
+            if (!playerLink) return;
+            
+            const playerId = playerLink.split('/')[2];
+            const overs = parseFloat(cols.eq(1).text().trim()) || 0;
+            const maidens = parseInt(cols.eq(2).text().trim()) || 0;
+            const runs = parseInt(cols.eq(3).text().trim()) || 0;
+            const wickets = parseInt(cols.eq(4).text().trim()) || 0;
+            const noBalls = parseInt(cols.eq(5).text().trim()) || 0;
+            const wides = parseInt(cols.eq(6).text().trim()) || 0;
+            const economy = parseFloat(cols.eq(7).text().trim()) || 0;
+
+            let player = bowlingData.find(p => p.playerId === playerId);
+
+            if (player) {
+              player.overs = overs;
+              player.maidens = maidens;
+              player.wickets = wickets;
+              player.noBalls = noBalls;
+              player.wides = wides;
+              player.economy = economy;
+              player.runsConceded = runs;
+              getBowlerDotBalls(matchId, playerId, currentInnings.toString())
+                .then(dotBalls => {
+                  player!.dotBalls = dotBalls;
+                });
+            } else {
+              player = createPlayerData(playerId);
+              player.overs = overs;
+              player.maidens = maidens;
+              player.wickets = wickets;
+              player.noBalls = noBalls;
+              player.wides = wides;
+              player.economy = economy;
+              player.runsConceded = runs;
+              bowlingData.push(player);
+              
+              getBowlerDotBalls(matchId, playerId, currentInnings.toString())
+                .then(dotBalls => {
+                  player!.dotBalls = dotBalls;
+                });
+            }
+          }
+        });
+      }
+
+      // Process fielding data
+      $(inningsElem).find('.cb-col.cb-col-100.cb-scrd-itms').each((_, row) => {
+        const cols = $(row).find('.cb-col');
+        const dismissalText = cols.eq(1).text().trim().toLowerCase();
+        
+        if (!dismissalText || dismissalText === 'batter' || dismissalText === 'batsman') return;
+        
+        const playerLink = cols.eq(0).find('a').attr('href');
+        if (!playerLink) return;
+        
+        const playerId = playerLink.split('/')[2];
+        let player = fieldingData.find(p => p.playerId === playerId);
+        
+        if (!player) {
+          player = createPlayerData(playerId);
+          fieldingData.push(player);
+        }
+        
+        // Process catches
+        if (dismissalText.includes('c ') || dismissalText.includes('c&b')) {
+          player.catches++;
+        }
+        
+        // Process stumpings
+        if (dismissalText.includes('st ')) {
+          player.stumpings++;
+        }
+        
+        // Process run outs
+        if (dismissalText.includes('run out')) {
+          player.runOuts++;
+        }
+      });
+    });
+
+    return {
+      battingData,
+      bowlingData,
+      fieldingData,
+      dnbData
+    };
+  } catch (error) {
+    console.error('Error parsing scorecard:', error);
+    return {
+      battingData: [],
+      bowlingData: [],
+      fieldingData: [],
+      dnbData: []
+    };
+  }
+}
+
+// Add this interface
+interface POTM {
+  match_id: string;
+  player_id: string;
+}
+
+// Add this function to extract POTM
+async function extractPOTM(matchUrl: string): Promise<POTM | null> {
+  try {
+    const matchId = matchUrl.split('/cricket-scorecard/')[1];
+    if (!matchId) {
+      console.error('Could not extract match ID from URL:', matchUrl);
+      return null;
+    }
+    
+    const url = `https://www.cricbuzz.com/cricket-scores/${matchId}`;
+    console.log('Fetching POTM from:', url);
+    
+    const response = await fetch(url, { headers });
+    const html = await response.text();
+    const $ = cheerio.load(html);
+    
+    const potmDiv = $('.cb-mom-itm, .cb-mom-item, .cb-mat-mop-itm');
+    if (potmDiv.length) {
+      const playerLink = potmDiv.find('a');
+      if (playerLink.length) {
+        const playerHref = playerLink.attr('href') || '';
+        const playerId = playerHref.split('/').filter(Boolean).pop() || '';
+        
+        return {
+          match_id: matchId,
+          player_id: playerId
+        };
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`Error fetching POTM data from ${matchUrl}:`, error);
+    return null;
+  }
+}
+
+function mergePlayerStats(battingData: PlayerData[], bowlingData: PlayerData[], fieldingData: PlayerData[], dnbData: PlayerData[]): PlayerData[] {
+  const mergedPlayers: { [key: string]: PlayerData } = {};
+
+  const mergePlayer = (player: PlayerData) => {
+    if (!mergedPlayers[player.playerId]) {
+      mergedPlayers[player.playerId] = createPlayerData(player.playerId);
+    }
+
+    const existing = mergedPlayers[player.playerId];
+
+    // Merge batting stats
+    if (player.runs !== undefined) {
+      existing.runs = player.runs;
+      existing.balls = player.balls;
+      existing.fours = player.fours;
+      existing.sixes = player.sixes;
+      existing.strikeRate = player.strikeRate;
+    }
+
+    // Merge bowling stats
+    if (player.overs !== undefined) {
+      existing.overs = player.overs;
+      existing.maidens = player.maidens;
+      existing.wickets = player.wickets;
+      existing.runsConceded = player.runsConceded;
+      existing.economy = player.economy;
+      existing.wides = player.wides;
+      existing.noBalls = player.noBalls;
+      existing.dotBalls = player.dotBalls;
+    }
+
+    // Merge fielding stats
+    existing.catches += player.catches;
+    existing.stumpings += player.stumpings;
+    existing.runOuts += player.runOuts;
+  };
+
+  [...battingData, ...bowlingData, ...fieldingData, ...dnbData].forEach(mergePlayer);
+
+  return Object.values(mergedPlayers);
+}
+
+function calculatePoints(playerData: PlayerData): {
+  battingPoints: number;
+  bowlingPoints: number;
+  fieldingPoints: number;
+} {
+  const points = {
+    battingPoints: 0,
+    bowlingPoints: 0,
+    fieldingPoints: 0
+  };
+
+  // Batting Points
+  if (playerData.runs !== undefined) {
+    // Base points (1 point per run)
+    points.battingPoints += playerData.runs;
+    
+    // Boundary bonus
+    points.battingPoints += (playerData.fours || 0);
+    points.battingPoints += (playerData.sixes || 0) * 2;
+    
+    // Milestone bonus (10 points for every 25 runs)
+    points.battingPoints += Math.floor(playerData.runs / 25) * 10;
+    
+    // Strike Rate bonus/penalty
+    if (playerData.balls && playerData.balls >= 10) {
+      const strikeRate = (playerData.runs / playerData.balls) * 100;
+      if (strikeRate < 50) points.battingPoints -= 15;
+      else if (strikeRate < 75) points.battingPoints -= 10;
+      else if (strikeRate < 100) points.battingPoints -= 5;
+      else if (strikeRate >= 125 && strikeRate < 150) points.battingPoints += 5;
+      else if (strikeRate >= 150 && strikeRate < 200) points.battingPoints += 10;
+      else if (strikeRate >= 200) points.battingPoints += 15;
+    }
+  }
+
+  // Bowling Points
+  if (playerData.wickets !== undefined) {
+    // Base points (20 points per wicket)
+    points.bowlingPoints += playerData.wickets * 20;
+    
+    // Wicket bonus (10 points for each wicket after first)
+    if (playerData.wickets > 1) {
+      points.bowlingPoints += (playerData.wickets - 1) * 10;
+    }
+    
+    // Maiden over points (20 points per maiden)
+    points.bowlingPoints += (playerData.maidens || 0) * 20;
+    
+    // Dot ball points (2 points per dot ball)
+    points.bowlingPoints += (playerData.dotBalls || 0) * 2;
+    
+    // Economy rate bonus/penalty
+    if (playerData.overs && playerData.overs >= 1) {
+      const economy = playerData.runsConceded / playerData.overs;
+      if (economy < 5.01) points.bowlingPoints += 20;
+      else if (economy < 6.01) points.bowlingPoints += 15;
+      else if (economy < 7.01) points.bowlingPoints += 10;
+      else if (economy < 8.01) points.bowlingPoints += 5;
+      else if (economy >= 9.01 && economy < 10.01) points.bowlingPoints -= 5;
+      else if (economy >= 10.01 && economy < 12.01) points.bowlingPoints -= 10;
+      else if (economy >= 12.01) points.bowlingPoints -= 20;
+    }
+    
+    // Penalties for extras
+    points.bowlingPoints -= Math.floor((playerData.wides || 0) / 2);
+    points.bowlingPoints -= (playerData.noBalls || 0) * 2;
+  }
+
+  // Fielding Points
+  points.fieldingPoints = (playerData.catches || 0) * 10 +
+                         (playerData.stumpings || 0) * 10 +
+                         (playerData.runOuts || 0) * 10;
+
+  return points;
+}
+
+function calculateAllPlayerPoints(players: PlayerData[], potm: POTM | null): PlayerPoints[] {
+  return players.map(player => {
+    const points = calculatePoints(player);
+    return {
+      match_id: potm?.match_id || '',
+      player_id: player.playerId,
+      batting_points: points.battingPoints,
+      bowling_points: points.bowlingPoints,
+      fielding_points: points.fieldingPoints,
+      potm_points: potm?.player_id === player.playerId ? 50 : 0
+    };
+  });
+}
+
+async function scrapeMatches(): Promise<Match[]> {
+  console.log('Starting to scrape matches...');
+  const url = 'https://www.cricbuzz.com/cricket-series/9351/womens-premier-league-2025/matches';
+  console.log('Fetching from URL:', url);
+  
+  const response = await fetch(url, { headers });
+  const html = await response.text();
+  console.log('Successfully fetched page');
+  
+  const $ = cheerio.load(html);
+  const matches: Match[] = [];
+  
+  // Find all match elements
+  const matchElements = $('.cb-col-100.cb-col.cb-series-matches');
+  console.log(`Found ${matchElements.length} match elements\n`);
+  
+  matchElements.each((index, element) => {
+    console.log(`Processing match ${index + 1}`);
+    
+    // Get the match URL - look for the link in the correct location
+    const matchUrl = $(element).find('a.text-hvr-underline').attr('href');
+    console.log('Match URL:', matchUrl);
+    
+    if (!matchUrl) {
+      console.log('Skipping match - no URL found');
+      return;
+    }
+
+    // Extract match ID from URL
+    const matchId = matchUrl.split('/')[2];
+    
+    // Get teams
+    const teamsText = $(element).find('a.text-hvr-underline span').text();
+    const teams = teamsText.split(' vs ');
+    
+    // Get venue
+    const venue = $(element).find('.text-gray').first().text();
+    
+    // Get result
+    const result = $(element).find('.cb-text-complete').text();
+    
+    // Get the date from the timestamp in the HTML
+    const scheduleDate = $(element).closest('.cb-col-100').find('.schedule-date[timestamp]');
+    const timestampAttr = scheduleDate.attr('timestamp');
+    const timeText = scheduleDate.text().trim();
+
+    let date = new Date();
+
+    if (timestampAttr) {
+      try {
+        // Convert timestamp to number and create Date object
+        const timestamp = parseInt(timestampAttr);
+        date = new Date(timestamp);
+        
+        console.log('Date parsing details:', {
+          rawTimestamp: timestampAttr,
+          parsedTimestamp: timestamp,
+          dateText: timeText,
+          resultDate: date.toISOString(),
+          resultLocal: date.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
+        });
+
+      } catch (error) {
+        console.error('Error parsing date:', error);
+        console.error('Raw timestamp:', timestampAttr);
+        console.error('Time text:', timeText);
+      }
+    }
+    
+    const match: Match = {
+      id: matchId,
+      teams,
+      date,
+      venue,
+      result,
+      scorecard_url: `https://www.cricbuzz.com${matchUrl}`
+    };
+    
+    console.log(match);
+    console.log();  // Empty line for readability
+    
+    matches.push(match);
+  });
+
+  console.log(`Total matches found: ${matches.length}`);
+  return matches;
+}
+
+
+async function exportPointsTable(points: PlayerPoints[]): Promise<void> {
+  try {
+    // Filter out non-player entries and include only players with actual points
+    const tablePoints = points
+      .filter(player => {
+        // Exclude special rows like "Extras", "Total", "Did Not Bat"
+        const excludedNames = ["Extras", "Total", "Did Not Bat"];
+        return !excludedNames.includes(player.player_id);
+      })
+      .map(player => ({
+        match_id: player.match_id,
+        player_id: player.player_id,
+        batting_points: player.batting_points,
+        bowling_points: player.bowling_points,
+        fielding_points: player.fielding_points,
+        potm_points: player.potm_points || 0
+      }));
+
+    // Log points for verification
+    console.log('\nPoints to be saved to database:');
+    tablePoints.forEach(player => {
+      const total = player.batting_points + player.bowling_points + 
+                   player.fielding_points + player.potm_points;
+      console.log(
+        `${player.player_id}: ` +
+        `Match ID: ${player.match_id}, ` +
+        `Bat=${player.batting_points} Bowl=${player.bowling_points} ` +
+        `Field=${player.fielding_points} POTM=${player.potm_points} ` +
+        `Total=${total}`
+      );
+    });
+
+    // Save to database
+    console.log('\nSaving points table to database...');
+    const { data, error } = await supabase
+      .from('player_points')
+      .insert(tablePoints)
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
+    console.log(`Successfully saved ${tablePoints.length} player points records to database`);
+  } catch (error) {
+    console.error('Error saving points table:', error);
+    throw error;
+  }
+}
+
+async function main() {
+  try {
+    console.log('Starting scraper...');
+    
+    const matches = await scrapeMatches();
+    console.log(`Found ${matches.length} matches to process`);
+
+    const matchesToProcess = matches.slice(0, 1);
+
+    for (const match of matchesToProcess) {
+      console.log(`\n=== Processing match ID: ${match.id} ===`);
+      console.log(`${match.teams[0]} vs ${match.teams[1]}`);
+      
+      const potm = await extractPOTM(match.scorecard_url);
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      try {
+        console.log(`Processing scorecard for match ${match.id}...`);
+        const {
+          battingData,
+          bowlingData,
+          fieldingData,
+          dnbData
+        } = await parseScorecard(match.id);
+
+        const mergedPlayers = mergePlayerStats(battingData, bowlingData, fieldingData, dnbData);
+        const playerPoints = calculateAllPlayerPoints(mergedPlayers, potm);
+        //await exportPointsTable(playerPoints);
+
+        console.log(`Successfully processed match ${match.id}`);
+
+      } catch (error) {
+        console.error(`Error processing match ${match.id}:`, error);
+        continue;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+
+    console.log('\nFinished processing all matches');
+  } catch (error) {
+    console.error('Error in main process:', error);
+    throw error;
+  }
+}
+
+main();
