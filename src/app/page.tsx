@@ -2,24 +2,22 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-slate-700">
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-[800px] mx-auto bg-white/95 backdrop-blur-lg rounded-2xl py-16 px-8 shadow-2xl">
-          <h1 className="text-5xl font-bold mb-8 text-center bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Fantasy Cricket
-          </h1>
+          <h1 className="text-5xl font-bold mb-8 text-center text-blue-600">Fantasy Cricket</h1>
 
-          <p className="text-gray-700 text-center mb-12 text-lg">
+          <p className="text-slate-700 text-center mb-12 text-lg">
             Build your dream team and compete with players worldwide
           </p>
 
           <nav className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             <Link
               href="/my-team"
-              className="group p-6 bg-gradient-to-br from-white to-gray-50 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-100"
+              className="group p-6 bg-gradient-to-br from-white to-slate-50 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-slate-100"
             >
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-indigo-600 rounded-lg shadow-md">
+                <div className="p-3 bg-blue-600 rounded-lg shadow-md">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"
@@ -35,18 +33,18 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-indigo-600">My Team</h2>
-                  <p className="text-gray-600">Manage your squad</p>
+                  <h2 className="text-xl font-semibold text-blue-600">My Team</h2>
+                  <p className="text-slate-600">Manage your squad</p>
                 </div>
               </div>
             </Link>
 
             <Link
               href="/transfer-market"
-              className="group p-6 bg-gradient-to-br from-white to-gray-50 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-100"
+              className="group p-6 bg-gradient-to-br from-white to-slate-50 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-slate-100"
             >
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-purple-600 rounded-lg shadow-md">
+                <div className="p-3 bg-blue-600 rounded-lg shadow-md">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"
@@ -62,18 +60,18 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-purple-600">Transfer Market</h2>
-                  <p className="text-gray-600">Buy & sell players</p>
+                  <h2 className="text-xl font-semibold text-blue-600">Transfer Market</h2>
+                  <p className="text-slate-600">Buy & sell players</p>
                 </div>
               </div>
             </Link>
 
             <Link
               href="/leagues"
-              className="group p-6 bg-gradient-to-br from-white to-gray-50 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-100"
+              className="group p-6 bg-gradient-to-br from-white to-slate-50 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-slate-100"
             >
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-pink-600 rounded-lg shadow-md">
+                <div className="p-3 bg-blue-600 rounded-lg shadow-md">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"
@@ -89,18 +87,18 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-pink-600">Leagues</h2>
-                  <p className="text-gray-600">Join competitions</p>
+                  <h2 className="text-xl font-semibold text-blue-600">Leagues</h2>
+                  <p className="text-slate-600">Join competitions</p>
                 </div>
               </div>
             </Link>
 
             <Link
               href="/leaderboard"
-              className="group p-6 bg-gradient-to-br from-white to-gray-50 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-100"
+              className="group p-6 bg-gradient-to-br from-white to-slate-50 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-slate-100"
             >
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-indigo-600 rounded-lg shadow-md">
+                <div className="p-3 bg-blue-600 rounded-lg shadow-md">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"
@@ -116,8 +114,8 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-indigo-600">Leaderboard</h2>
-                  <p className="text-gray-600">Check rankings</p>
+                  <h2 className="text-xl font-semibold text-blue-600">Leaderboard</h2>
+                  <p className="text-slate-600">Check rankings</p>
                 </div>
               </div>
             </Link>
