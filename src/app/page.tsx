@@ -1,35 +1,37 @@
-"use client";
+"use client"
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 
 // Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function Home() {
   const router = useRouter();
   const [featuredPlayers, setFeaturedPlayers] = useState([]);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [username, setUsername] = useState(""); // Added username state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState(''); // Added username state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
-
+  
   // Check for authenticated user on load
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-      } else {
-        setUser(null);
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          setUser(session.user);
+        } else {
+          setUser(null);
+        }
       }
-    });
+    );
 
     // Get current session
     checkUser();
@@ -44,9 +46,7 @@ export default function Home() {
 
   // Check if user is already logged in
   const checkUser = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
       setUser(session.user);
     }
@@ -55,15 +55,15 @@ export default function Home() {
   // Fetch player data
   const fetchPlayers = async () => {
     try {
-      const response = await fetch("/data/players_with_prices.json");
+      const response = await fetch('/data/players_with_prices.json');
       const data = await response.json();
       const randomPlayers = getRandomPlayers(data, 3);
       setFeaturedPlayers(randomPlayers);
     } catch (error) {
-      console.error("Error loading player data:", error);
+      console.error('Error loading player data:', error);
     }
   };
-
+  
   // Get random players
   const getRandomPlayers = (players, count) => {
     const shuffled = [...players].sort(() => 0.5 - Math.random());
@@ -75,17 +75,17 @@ export default function Home() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
+    
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
+      
       if (error) throw error;
-
+      
       // Redirect to dashboard or display success message
-      router.push("/my-team");
+      router.push('/my-team');
     } catch (error) {
       setError(error.message);
     } finally {
@@ -97,7 +97,7 @@ export default function Home() {
   const handleSocialSignIn = async (provider) => {
     setLoading(true);
     setError(null);
-
+    
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -105,7 +105,7 @@ export default function Home() {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-
+      
       if (error) throw error;
     } catch (error) {
       setError(error.message);
@@ -118,7 +118,7 @@ export default function Home() {
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error("Error signing out:", error);
+      console.error('Error signing out:', error);
     }
   };
 
@@ -130,7 +130,10 @@ export default function Home() {
         {user ? (
           <div className="flex items-center space-x-4">
             <span>Welcome, {user.email}</span>
-            <button onClick={handleSignOut} className="bg-gray-200 text-black px-4 py-2 rounded">
+            <button 
+              onClick={handleSignOut}
+              className="bg-gray-200 text-black px-4 py-2 rounded"
+            >
               Sign Out
             </button>
             <Link href="/my-team" className="bg-cyan-400 text-black px-4 py-2 rounded">
@@ -140,36 +143,32 @@ export default function Home() {
         ) : (
           <div className="flex space-x-4 w-full max-w-3xl">
             <div className="flex-1">
-              <label htmlFor="email" className="block text-sm mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
+              <label htmlFor="email" className="block text-sm mb-1">Email</label>
+              <input 
+                type="email" 
+                id="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border-b-2 border-gray-300 pb-1 focus:outline-none focus:border-blue-500"
+                className="w-full border-b-2 border-gray-300 pb-1 focus:outline-none focus:border-blue-500" 
               />
             </div>
             <div className="flex-1">
-              <label htmlFor="password" className="block text-sm mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
+              <label htmlFor="password" className="block text-sm mb-1">Password</label>
+              <input 
+                type="password" 
+                id="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border-b-2 border-gray-300 pb-1 focus:outline-none focus:border-blue-500"
+                className="w-full border-b-2 border-gray-300 pb-1 focus:outline-none focus:border-blue-500" 
               />
             </div>
             <div className="flex items-end space-x-2">
-              <button
+              <button 
                 onClick={handleSignIn}
                 disabled={loading}
                 className="bg-cyan-400 text-black px-4 py-2 rounded disabled:opacity-50"
               >
-                {loading ? "Signing In..." : "Sign In"}
+                {loading ? 'Signing In...' : 'Sign In'}
               </button>
               <Link href="/forgot-password" className="text-sm text-blue-500 whitespace-nowrap">
                 Forgot your password? →
@@ -178,7 +177,7 @@ export default function Home() {
           </div>
         )}
       </div>
-
+      
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
           {error}
@@ -190,29 +189,29 @@ export default function Home() {
         <div className="py-4">
           <p className="text-center text-sm mb-2">or login with</p>
           <div className="grid grid-cols-4 gap-2">
-            <button
-              onClick={() => handleSocialSignIn("facebook")}
+            <button 
+              onClick={() => handleSocialSignIn('facebook')}
               disabled={loading}
               className="bg-blue-600 text-white py-2 rounded flex items-center justify-center disabled:opacity-50"
             >
               <span className="mr-2">f</span> Login With Facebook
             </button>
-            <button
-              onClick={() => handleSocialSignIn("twitter")}
+            <button 
+              onClick={() => handleSocialSignIn('twitter')}
               disabled={loading}
               className="bg-black text-white py-2 rounded flex items-center justify-center disabled:opacity-50"
             >
               <span className="mr-2">𝕏</span> Login With X
             </button>
-            <button
-              onClick={() => handleSocialSignIn("google")}
+            <button 
+              onClick={() => handleSocialSignIn('google')}
               disabled={loading}
               className="bg-white border py-2 rounded flex items-center justify-center disabled:opacity-50"
             >
               <span className="mr-2">G</span> Login With Google
             </button>
-            <button
-              onClick={() => handleSocialSignIn("apple")}
+            <button 
+              onClick={() => handleSocialSignIn('apple')}
               disabled={loading}
               className="bg-black text-white py-2 rounded flex items-center justify-center disabled:opacity-50"
             >
@@ -232,8 +231,8 @@ export default function Home() {
               </div>
               <h2 className="text-xl font-bold mb-2">Register to Play Fantasy Cricket League</h2>
               <p className="max-w-lg">
-                With millions of players worldwide, Fantasy Cricket is the ultimate cricket fantasy
-                game. It's FREE to play and you can win great prizes throughout the season!
+                With millions of players worldwide, Fantasy Cricket is the ultimate cricket fantasy game. 
+                It's FREE to play and you can win great prizes throughout the season!
               </p>
             </div>
             <Link href="/register" className="bg-cyan-400 text-black px-6 py-2 rounded">
@@ -248,13 +247,11 @@ export default function Home() {
         {/* Pick Your Squad */}
         <div className="bg-gray-100 rounded overflow-hidden">
           <div className="flex justify-center p-4">
-            {Array(3)
-              .fill(0)
-              .map((_, i) => (
-                <div key={i} className="-mx-2 w-16">
-                  <div className="h-20 bg-gray-200 rounded-lg transform rotate-3"></div>
-                </div>
-              ))}
+            {Array(3).fill(0).map((_, i) => (
+              <div key={i} className="-mx-2 w-16">
+                <div className="h-20 bg-gray-200 rounded-lg transform rotate-3"></div>
+              </div>
+            ))}
           </div>
           <div className="bg-cyan-400 p-4">
             <h3 className="text-xl font-bold mb-2">Pick Your Squad</h3>
@@ -264,8 +261,8 @@ export default function Home() {
             <div className="grid grid-cols-3 gap-1 text-center text-xs">
               {featuredPlayers.map((player, index) => (
                 <div key={index} className="bg-purple-900 text-white p-2">
-                  <div>{player?.Player?.split(" ")[0] || "Player"}</div>
-                  <div>{player?.Team_Name || player?.Country || "Team"}</div>
+                  <div>{player?.Player?.split(' ')[0] || 'Player'}</div>
+                  <div>{player?.Team_Name || player?.Country || 'Team'}</div>
                 </div>
               ))}
             </div>
@@ -279,9 +276,7 @@ export default function Home() {
           </div>
           <div className="p-4">
             <div className="tabs flex border-b mb-4">
-              <button className="px-4 py-2 font-semibold border-b-2 border-gray-300">
-                Leagues
-              </button>
+              <button className="px-4 py-2 font-semibold border-b-2 border-gray-300">Leagues</button>
               <button className="px-4 py-2">Cups</button>
             </div>
             <button className="w-full bg-purple-900 text-white text-left p-2 mb-4 rounded">
@@ -305,8 +300,7 @@ export default function Home() {
         <div className="bg-gradient-to-br from-cyan-400 to-blue-500 rounded p-6 text-black">
           <h3 className="text-xl font-bold mb-2">Create and Join Leagues</h3>
           <p className="mb-6">
-            Play against friends and family, colleagues or a web community in invitational leagues
-            and tournaments.
+            Play against friends and family, colleagues or a web community in invitational leagues and tournaments.
           </p>
         </div>
       </div>
@@ -329,8 +323,8 @@ export default function Home() {
               Who are now the best fantasy batters as popular picks are sidelined?
             </h3>
             <p className="mb-4">
-              The Scout analyses the underlying statistics, assesses the upcoming fixtures and
-              reveals the standout picks for the next two match days
+              The Scout analyses the underlying statistics, assesses the upcoming fixtures and reveals the 
+              standout picks for the next two match days
             </p>
             <p className="text-xs">01/03/2025</p>
           </div>
