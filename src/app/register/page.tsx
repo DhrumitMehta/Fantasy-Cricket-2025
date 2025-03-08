@@ -10,10 +10,45 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// List of countries for dropdown
+const countries = [
+  "Afghanistan",
+  "Australia",
+  "Bangladesh",
+  "England",
+  "India",
+  "Ireland",
+  "New Zealand",
+  "Pakistan",
+  "South Africa",
+  "Sri Lanka",
+  "West Indies",
+  "Zimbabwe",
+  // Add more countries as needed
+];
+
+// Available cricket teams
+const cricketTeams = [
+  "Chennai Super Kings",
+  "Delhi Capitals",
+  "Gujarat Titans",
+  "Kolkata Knight Riders",
+  "Lucknow Super Giants",
+  "Mumbai Indians",
+  "Punjab Kings",
+  "Rajasthan Royals",
+  "Royal Challengers Bangalore",
+  "Sunrisers Hyderabad",
+  // Add or modify teams as needed
+];
+
 export default function Register() {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState(""); // Added username state
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState(""); // Will be used as team name
+  const [country, setCountry] = useState("");
+  const [favoriteTeam, setFavoriteTeam] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,68 +69,61 @@ export default function Register() {
       return;
     }
 
+    // Validate all fields are filled
+    if (!email || !fullName || !username || !country || !favoriteTeam || !password) {
+      setError("Please fill in all fields");
+      setLoading(false);
+      return;
+    }
+
     try {
-      // First check if username is already taken
-      const { data: existingUsers, error: fetchError } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("username", username)
-        .single();
-
-      if (existingUsers) {
-        setError("Username is already taken");
-        setLoading(false);
-        return;
-      }
-
-      // Proceed with signup
-      const { data, error } = await supabase.auth.signUp({
+      // First sign up the user with Supabase Auth
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
-            username,
-            full_name: username,
-            avatar_url: "",
+            full_name: fullName,
+            username: username,
+            country: country,
+            favorite_team: favoriteTeam,
           },
         },
       });
 
-      if (error) throw error;
+      if (signUpError) throw signUpError;
 
-      // Move profile creation to after confirming user exists
+      // If signup is successful and we have a user ID, update the profile
       if (data.user) {
-        try {
-          const { error: profileError } = await supabase.from("profiles").upsert(
-            [
-              {
-                id: data.user.id,
-                username,
-                email,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              },
-            ],
-            { onConflict: "id" }
-          );
+        // Use upsert operation (update if exists, insert if not)
+        const { error: profileError } = await supabase.from("profiles").upsert(
+          [
+            {
+              id: data.user.id, // This is the primary key
+              full_name: fullName,
+              username: username,
+              country: country,
+              favorite_team: favoriteTeam,
+              updated_at: new Date().toISOString(),
+            },
+          ],
+          {
+            onConflict: "id", // Specify the conflict column
+            ignoreDuplicates: false, // Update the record if there's a conflict
+          }
+        );
 
-          if (profileError) throw profileError;
-        } catch (profileError) {
-          console.error("Error creating profile:", profileError);
-          throw new Error("Failed to create user profile");
+        if (profileError) {
+          console.error("Profile update error:", profileError);
+          throw profileError;
         }
       }
 
       setSuccess(true);
-      // Note: Supabase might require email confirmation before fully creating the account
     } catch (error) {
-      if (error instanceof AuthError) {
-        setError(error.message);
-      } else {
-        setError("An unexpected error occurred");
-        console.error("Registration error:", error);
-      }
+      console.error("Registration error:", error);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -115,6 +143,9 @@ export default function Register() {
       });
 
       if (error) throw error;
+
+      // Note: For social logins, you'll need to handle profile creation
+      // in the callback page since we don't have access to the user data yet
     } catch (error) {
       if (error instanceof AuthError) {
         setError(error.message);
@@ -161,10 +192,24 @@ export default function Register() {
           />
         </div>
 
-        {/* New username field */}
+        <div>
+          <label htmlFor="fullName" className="block text-sm font-medium mb-1">
+            Full Name
+          </label>
+          <input
+            type="text"
+            id="fullName"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter your full name"
+          />
+        </div>
+
         <div>
           <label htmlFor="username" className="block text-sm font-medium mb-1">
-            Username
+            Team Name (Username)
           </label>
           <input
             type="text"
@@ -173,7 +218,48 @@ export default function Register() {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
             required
             className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="This will be your team's name in leagues"
           />
+        </div>
+
+        <div>
+          <label htmlFor="country" className="block text-sm font-medium mb-1">
+            Country
+          </label>
+          <select
+            id="country"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            required
+            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select your country</option>
+            {countries.map((country) => (
+              <option key={country} value={country}>
+                {country}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="favoriteTeam" className="block text-sm font-medium mb-1">
+            Favorite Team
+          </label>
+          <select
+            id="favoriteTeam"
+            value={favoriteTeam}
+            onChange={(e) => setFavoriteTeam(e.target.value)}
+            required
+            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select your favorite team</option>
+            {cricketTeams.map((team) => (
+              <option key={team} value={team}>
+                {team}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
