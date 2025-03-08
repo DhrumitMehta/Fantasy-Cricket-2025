@@ -235,6 +235,16 @@ export default function Home() {
                     </svg>
                     Continue with Google
                   </button>
+
+                  <div className="mt-4 text-center text-sm text-gray-400">
+                    Don't have an account?{" "}
+                    <Link
+                      href="/register"
+                      className="text-[#4ade80] hover:text-[#22c55e] font-medium"
+                    >
+                      Register here
+                    </Link>
+                  </div>
                 </div>
               </div>
             ) : (
