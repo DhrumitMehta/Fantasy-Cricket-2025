@@ -123,7 +123,7 @@ export default function Register() {
       setSuccess(true);
     } catch (error) {
       console.error("Registration error:", error);
-      setError(error.message);
+      setError(error instanceof Error ? error.message : "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
