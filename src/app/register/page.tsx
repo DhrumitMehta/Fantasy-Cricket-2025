@@ -94,31 +94,31 @@ export default function Register() {
 
       if (signUpError) throw signUpError;
 
-      // If signup is successful and we have a user ID, update the profile
-      if (data.user) {
-        // Use upsert operation (update if exists, insert if not)
-        const { error: profileError } = await supabase.from("profiles").upsert(
-          [
-            {
-              id: data.user.id, // This is the primary key
-              full_name: fullName,
-              username: username,
-              country: country,
-              favorite_team: favoriteTeam,
-              updated_at: new Date().toISOString(),
-            },
-          ],
-          {
-            onConflict: "id", // Specify the conflict column
-            ignoreDuplicates: false, // Update the record if there's a conflict
-          }
-        );
+      // // If signup is successful and we have a user ID, update the profile
+      // if (data.user) {
+      //   // Use upsert operation (update if exists, insert if not)
+      //   const { error: profileError } = await supabase.from("profiles").upsert(
+      //     [
+      //       {
+      //         id: data.user.id, // This is the primary key
+      //         full_name: fullName,
+      //         username: username,
+      //         country: country,
+      //         favorite_team: favoriteTeam,
+      //         updated_at: new Date().toISOString(),
+      //       },
+      //     ],
+      //     {
+      //       onConflict: "id", // Specify the conflict column
+      //       ignoreDuplicates: false, // Update the record if there's a conflict
+      //     }
+      //   );
 
-        if (profileError) {
-          console.error("Profile update error:", profileError);
-          throw profileError;
-        }
-      }
+      //   if (profileError) {
+      //     console.error("Profile update error:", profileError);
+      //     throw profileError;
+      //   }
+      // }
 
       setSuccess(true);
     } catch (error) {
