@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { nanoid } from "nanoid";
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -15,40 +16,65 @@ export default function JoinLeague() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleJoinPublicLeague = async (leagueId: string) => {
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     try {
-      if (!user) return;
-      
+      // Get user session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setError("Please login to join a league");
+        return;
+      }
+
+      // First, get the league ID using the league code
+      const { data: league, error: leagueError } = await supabase
+        .from('leagues')
+        .select('id')
+        .eq('join_code', leagueCode)
+        .single();
+
+      if (leagueError || !league) {
+        setError("Invalid league code");
+        return;
+      }
+
       // Check if user is already a member
       const { data: existingMember } = await supabase
         .from('user_leagues')
         .select('*')
-        .eq('user_id', user.id)
-        .eq('league_id', leagueId)
+        .eq('user_id', session.user.id)
+        .eq('league_id', league.id)
         .maybeSingle();
         
       if (existingMember) {
-        alert("You're already a member of this league");
+        setError("You're already a member of this league");
         return;
       }
+
+      const unique_user_id = nanoid() 
       
       // Add the user to the league
       const { error: joinError } = await supabase
         .from('user_leagues')
         .insert({
-          user_id: user.id,
-          league_id: leagueId,
+          id: unique_user_id,
+          user_id: session.user.id,
+          league_id: league.id,
           is_admin: false
         });
         
       if (joinError) throw joinError;
       
-      // Refresh the leagues data
-      fetchLeagues(user.id);
       alert("Successfully joined the league!");
+      router.push(`/leagues/${league.id}`);
     } catch (error: any) {
       console.error("Error joining league:", error);
-      alert(error.message || "Failed to join the league");
+      setError(error.message || "Failed to join the league");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,7 +90,7 @@ export default function JoinLeague() {
             </div>
           )}
           
-          <form onSubmit={handleJoinLeague} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="leagueCode" className="block text-sm font-medium text-gray-300 mb-1">
                 League Code
@@ -80,12 +106,12 @@ export default function JoinLeague() {
               />
             </div>
             
-            // Then update the button's onClick handler:
             <button
-            onClick={() => handleJoinPublicLeague(league.id)}
-            className="bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] text-center py-2 rounded-lg font-medium transition-all w-full"
+              type="submit"
+              disabled={loading}
+              className="bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] text-center py-2 rounded-lg font-medium transition-all w-full disabled:opacity-50"
             >
-            Join League
+              {loading ? "Joining..." : "Join League"}
             </button>
           </form>
         </div>
