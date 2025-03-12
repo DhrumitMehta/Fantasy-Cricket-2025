@@ -117,8 +117,12 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
       const { data: membersData, error: membersError } = await supabase
         .from('user_leagues')
         .select(`
-          *,
-          profiles:user_id (
+          id,
+          user_id,
+          league_id,
+          is_admin,
+          joined_at,
+          profiles!user_id (
             username,
             full_name,
             country
