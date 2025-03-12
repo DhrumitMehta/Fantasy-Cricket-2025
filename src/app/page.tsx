@@ -84,7 +84,7 @@ export default function Home() {
       });
 
       if (error) throw error;
-      router.push("/my-team");
+      router.push("/");
     } catch (error) {
       if (error instanceof AuthError) {
         setError(error.message);
