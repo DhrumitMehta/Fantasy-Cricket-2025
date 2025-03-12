@@ -481,33 +481,48 @@ export default function TransferMarket() {
                 {players.map((player) => (
                   <div
                     key={`available-${player.Player_ID}`}
-                    className="p-4 border border-gray-100 rounded-lg hover:border-blue-200 transition-colors"
+                    className="p-4 border border-gray-100 rounded-lg hover:border-blue-200 transition-colors flex items-center"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3
-                          className="font-bold cursor-pointer hover:text-blue-600"
-                          onClick={() => setSelectedPlayerForModal(player)}
-                        >
-                          {player.Player}
-                          {player.Country !== "India" && <span className="ml-2">✈️</span>}
-                        </h3>
-                        <div className="text-sm text-gray-500 mt-1">{player.Team_Name}</div>
+                    {/* Profile Image */}
+                    <img
+                      src="/profile-placeholder.png"
+                      alt={`${player.Player} profile`}
+                      className="w-10 h-10 rounded-full mr-4"
+                    />
+
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3
+                            className="font-bold cursor-pointer hover:text-blue-600"
+                            onClick={() => setSelectedPlayerForModal(player)}
+                          >
+                            {player.Player}
+                            {player.Country !== "India" && <span className="ml-2">✈️</span>}
+                          </h3>
+                          <div className="text-sm text-gray-500 mt-1">{player.Team_Name}</div>
+                          {/* Player Position */}
+                          <div className="text-sm text-gray-500">{player.Player_Role}</div>
+                        </div>
                       </div>
-                      <span className="text-sm bg-green-50 px-3 py-1 rounded-full text-green-600 font-medium">
+                    </div>
+
+                    {/* Price and "+" Icon */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm bg-green-50 px-3 py-1 mt-1 rounded-full text-green-600 font-medium mx-2">
                         {player.Price?.toFixed(1)}M
                       </span>
+                      <button
+                        onClick={() => togglePlayerSelection(player)}
+                        className="text-blue-500 hover:text-blue-600 transition-colors text-2xl"
+                        disabled={
+                          selectedPlayers.filter((p) => p.Country !== "India").length >= 4 &&
+                          player.Country !== "India"
+                        }
+                      >
+                        +
+                      </button>
                     </div>
-                    <button
-                      onClick={() => togglePlayerSelection(player)}
-                      className="w-full mt-2 py-2 px-4 rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors"
-                      disabled={
-                        selectedPlayers.filter((p) => p.Country !== "India").length >= 4 &&
-                        player.Country !== "India"
-                      }
-                    >
-                      Add to Selection
-                    </button>
                   </div>
                 ))}
               </div>
