@@ -4,43 +4,20 @@ import Link from "next/link";
 import { useState, FormEvent } from "react";
 import { createClient, AuthError, Provider } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import countriesData from '../../../public/data/country_names.json';
+import cricketTeamsData from '../../../public/data/cricket_teams.json';
+
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// List of countries for dropdown
-const countries = [
-  "Afghanistan",
-  "Australia",
-  "Bangladesh",
-  "England",
-  "India",
-  "Ireland",
-  "New Zealand",
-  "Pakistan",
-  "South Africa",
-  "Sri Lanka",
-  "West Indies",
-  "Zimbabwe",
-  // Add more countries as needed
-];
+// Gen the countries information from the countries json in data - TO BE FIXED
+const countries = countriesData.map((country) => country.name);
 
-// Available cricket teams
-const cricketTeams = [
-  "Chennai Super Kings",
-  "Delhi Capitals",
-  "Gujarat Titans",
-  "Kolkata Knight Riders",
-  "Lucknow Super Giants",
-  "Mumbai Indians",
-  "Punjab Kings",
-  "Rajasthan Royals",
-  "Royal Challengers Bangalore",
-  "Sunrisers Hyderabad",
-  // Add or modify teams as needed
-];
+// fetch crickteams list from the json in data.
+const cricketTeams = cricketTeamsData.map((team) => team.name);
 
 export default function Register() {
   const router = useRouter();
@@ -62,12 +39,23 @@ export default function Register() {
     setError(null);
     setSuccess(false);
 
+    // Define the password validation regex
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+
     // Validate passwords match
     if (password !== confirmPassword) {
       setError("Passwords don't match");
       setLoading(false);
       return;
     }
+
+    // Validate password strength
+    if (!passwordRegex.test(password)) {
+      setError("Password must be at least 6 characters long and include at least one lowercase letter, one uppercase letter, and one digit.");
+      setLoading(false);
+      return;
+    }
+
 
     // Validate all fields are filled
     if (!email || !fullName || !username || !country || !favoriteTeam || !password) {
@@ -274,9 +262,12 @@ export default function Register() {
                       Select your country
                     </option>
                     {countries.map((country) => (
-                      <option key={country} value={country} className="bg-[#1a1c2e]">
-                        {country}
-                      </option>
+                    <option 
+                      key={country} 
+                      value={country} 
+                      className="bg-[#1a1c2e] truncate overflow-hidden whitespace-nowrap">
+                    {country}
+                    </option>
                     ))}
                   </select>
                 </div>
