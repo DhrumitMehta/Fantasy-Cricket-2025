@@ -116,7 +116,7 @@ export default function TransferMarket() {
   const [myTeam, setMyTeam] = useState<Player[]>([]);
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
   const [filters, setFilters] = useState({
-    role: "",
+    role: "WK-Batter",
     country: "",
     team: "",
     searchQuery: "",
@@ -366,7 +366,15 @@ export default function TransferMarket() {
     <div className="h-screen flex">
       {/* Left Side - Filters and Player List */}
       <div className="w-1/2 h-full overflow-y-auto p-6 bg-gray-50">
-        <h1 className="text-2xl font-bold mb-6">Transfer Market</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Transfer Market</h1>
+          <button
+            onClick={() => router.push("/")}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            <span>←</span> Back to Home
+          </button>
+        </div>
 
         {/* Stats Card */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
@@ -385,7 +393,7 @@ export default function TransferMarket() {
         </div>
 
         {/* Filters Section */}
-        <div className="space-y-4 mb-6">
+        <div className="space-y-4 mb-4">
           <input
             type="text"
             placeholder="Search player name..."
@@ -395,19 +403,6 @@ export default function TransferMarket() {
           />
 
           <div className="grid grid-cols-2 gap-4">
-            <select
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={filters.role}
-              onChange={(e) => setFilters({ ...filters, role: e.target.value })}
-            >
-              <option value="">All Roles</option>
-              {roles.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
-
             <select
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={filters.country}
@@ -463,6 +458,94 @@ export default function TransferMarket() {
                 className="absolute w-full h-2 appearance-none bg-transparent pointer-events-auto z-10"
                 style={{ WebkitAppearance: "none" }}
               />
+            </div>
+          </div>
+
+          {/* Role Selection Tabs */}
+          <div className="mt-4">
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => setFilters({ ...filters, role: "WK-Batter" })}
+                className={`flex-1 py-2 px-4 text-center border-b-2 ${
+                  filters.role === "WK-Batter"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent"
+                }`}
+              >
+                <div className="font-medium">
+                  WK ({selectedPlayers.filter((p) => p.Player_Role === "WK-Batter").length})
+                </div>
+              </button>
+              <button
+                onClick={() => setFilters({ ...filters, role: "Batter" })}
+                className={`flex-1 py-2 px-4 text-center border-b-2 ${
+                  filters.role === "Batter" ? "border-blue-500 text-blue-600" : "border-transparent"
+                }`}
+              >
+                <div className="font-medium">
+                  BAT ({selectedPlayers.filter((p) => p.Player_Role === "Batter").length})
+                </div>
+              </button>
+              <button
+                onClick={() => setFilters({ ...filters, role: "Batting Allrounder" })}
+                className={`flex-1 py-2 px-4 text-center border-b-2 ${
+                  filters.role === "Batting Allrounder"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent"
+                }`}
+              >
+                <div className="font-medium">
+                  BAT-AR (
+                  {selectedPlayers.filter((p) => p.Player_Role === "Batting Allrounder").length})
+                </div>
+              </button>
+              <button
+                onClick={() => setFilters({ ...filters, role: "Bowling Allrounder" })}
+                className={`flex-1 py-2 px-4 text-center border-b-2 ${
+                  filters.role === "Bowling Allrounder"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent"
+                }`}
+              >
+                <div className="font-medium">
+                  BOWL-AR (
+                  {selectedPlayers.filter((p) => p.Player_Role === "Bowling Allrounder").length})
+                </div>
+              </button>
+              <button
+                onClick={() => setFilters({ ...filters, role: "Bowler" })}
+                className={`flex-1 py-2 px-4 text-center border-b-2 ${
+                  filters.role === "Bowler" ? "border-blue-500 text-blue-600" : "border-transparent"
+                }`}
+              >
+                <div className="font-medium">
+                  BOWL ({selectedPlayers.filter((p) => p.Player_Role === "Bowler").length})
+                </div>
+              </button>
+            </div>
+
+            {/* Role Selection Rules */}
+            <div className="bg-gray-50 p-3 mt-2 rounded-lg text-sm text-gray-600 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-2 text-blue-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              {filters.role === "WK-Batter" && "Pick 1-4 Wicket-Keepers"}
+              {filters.role === "Batter" && "Pick 3-6 Batters"}
+              {filters.role === "Batting Allrounder" && "Pick 1-4 Batting All-rounders"}
+              {filters.role === "Bowling Allrounder" && "Pick 1-4 Bowling All-rounders"}
+              {filters.role === "Bowler" && "Pick 3-6 Bowlers"}
+              {!filters.role && "Select a role tab to see selection rules"}
             </div>
           </div>
         </div>
