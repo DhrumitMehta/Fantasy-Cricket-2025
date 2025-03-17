@@ -366,7 +366,15 @@ export default function TransferMarket() {
     <div className="h-screen flex">
       {/* Left Side - Filters and Player List */}
       <div className="w-1/2 h-full overflow-y-auto p-6 bg-gray-50">
-        <h1 className="text-2xl font-bold mb-6">Transfer Market</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Transfer Market</h1>
+          <button
+            onClick={() => router.push("/")}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            <span>←</span> Back to Home
+          </button>
+        </div>
 
         {/* Stats Card */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
