@@ -33,6 +33,13 @@ type LeagueMember = {
     country: string | null;
   };
   fantasy_points?: number;
+  matches_played?: number;
+  avg_points?: number;
+};
+
+type UserPoints = {
+  user_id: string;
+  total_points: number;
 };
 
 export default function LeagueDetails({ params }: { params: { id: string } }) {
@@ -58,7 +65,7 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
         
         if (session?.user) {
           setUser(session.user);
-          fetchLeagueDetails(session.user.id, leagueId);
+          fetchLeagueDetails();
         } else {
           router.push('/'); // Redirect to home if not logged in
         }
@@ -71,12 +78,13 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
     checkUser();
   }, [leagueId, router]);
 
-  const fetchLeagueDetails = async (userId: string, leagueId: string) => {
-    setLoading(true);
-    setError(null);
+  const fetchLeagueDetails = async () => {
     try {
-      console.log("Fetching league details for league ID:", leagueId);
-      
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) throw new Error('No user logged in');
+
       // Fetch league details
       const { data: leagueData, error: leagueError } = await supabase
         .from('leagues')
@@ -85,36 +93,91 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
         .single();
       
       if (leagueError) {
-        console.error("League data error:", leagueError);
-        throw new Error(leagueError.message || "Failed to fetch league");
+        console.error('League error:', leagueError);
+        throw leagueError;
       }
-      
-      if (!leagueData) {
-        throw new Error("League not found");
-      }
-      
       setLeague(leagueData);
-      console.log("League data fetched successfully:", leagueData);
 
-      // Check if user is a member or admin
-      const { data: membership, error: membershipError } = await supabase
-        .from('user_leagues')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('league_id', leagueId)
-        .maybeSingle();
-      
-      if (membershipError) {
-        console.error("Membership error:", membershipError);
-        throw new Error(membershipError.message || "Failed to check membership");
-      }
-      
-      setIsMember(!!membership);
-      setIsAdmin(membership?.is_admin || false);
-      console.log("Membership status:", !!membership, "Admin status:", membership?.is_admin || false);
-
-      // Fetch league members with profiles
+      // Fetch league members
       const { data: membersData, error: membersError } = await supabase
+        .from('user_leagues')
+        .select('user_id')
+        .eq('league_id', leagueId);
+
+      if (membersError) {
+        console.error('Members error:', membersError);
+        throw membersError;
+      }
+
+      // Calculate total points for each member
+      for (const member of membersData) {
+        const { data: matchdayPoints, error: matchdayError } = await supabase
+          .from('matchday_teams')
+          .select('points')
+          .eq('user_id', member.user_id);
+
+        if (matchdayError) {
+          console.error('Matchday points error:', matchdayError);
+          throw matchdayError;
+        }
+
+        const totalPoints = matchdayPoints.reduce((sum, matchday) => sum + matchday.points, 0);
+        const matchesPlayed = matchdayPoints.length; // Count matches played
+
+        // Check if an entry exists in league_standings
+        const { data: standingsData, error: standingsError } = await supabase
+          .from('league_standings')
+          .select('id')
+          .eq('user_id', member.user_id)
+          .eq('league_id', leagueId)
+          .single();
+
+        if (standingsError && standingsError.code !== 'PGRST116') { // PGRST116 is the code for no rows found
+          console.error('Standings error:', standingsError);
+          throw standingsError;
+        }
+
+        // Insert a new entry if it doesn't exist
+        if (!standingsData) {
+          console.log('Inserting into league_standings:', {
+            user_id: member.user_id,
+            league_id: leagueId,
+            total_points: 0,
+            matches_played: 0
+          });
+          const { error: insertError } = await supabase
+            .from('league_standings')
+            .insert({
+              user_id: member.user_id,
+              league_id: leagueId,
+              total_points: 0, // Initialize with 0
+              matches_played: 0 // Initialize with 0
+            });
+
+          if (insertError) {
+            console.error('Insert standings error:', insertError.message || insertError);
+            throw insertError;
+          }
+        }
+
+        // Update the total_points in league_standings
+        const { error: updateError } = await supabase
+          .from('league_standings')
+          .update({
+            total_points: totalPoints,
+            matches_played: matchesPlayed
+          })
+          .eq('user_id', member.user_id)
+          .eq('league_id', leagueId);
+
+        if (updateError) {
+          console.error('Update total points error:', updateError);
+          throw updateError;
+        }
+      }
+
+      // Fetch league members with their standings using LEFT JOIN
+      const { data: membersDataWithStandings, error: membersStandingsError } = await supabase
         .from('user_leagues')
         .select(`
           id,
@@ -126,62 +189,62 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
             username,
             full_name,
             country
+          ),
+          league_standings (
+            total_points,
+            matches_played
           )
         `)
-        .eq('league_id', leagueId)
-        .order('is_admin', { ascending: false });
-      
-      if (membersError) {
-        console.error("Members error:", membersError);
-        throw new Error(membersError.message || "Failed to fetch members");
+        .eq('league_id', leagueId);
+
+      if (membersStandingsError) {
+        console.error('Members standings error:', membersStandingsError.message || membersStandingsError);
+        throw membersStandingsError;
       }
 
-      if (!membersData || membersData.length === 0) {
-        console.log("No members found for this league");
-        setMembers([]);
-      } else {
-        console.log(`Found ${membersData.length} members, fetching team points...`);
-        
-        const membersWithPoints = await Promise.all(
-          membersData.map(async (member) => {
-            try {
-              // Get the user's team in this league
-              const { data: teamData, error: teamError } = await supabase
-                .from('user_teams')
-                .select('total_points')
-                .eq('user_id', member.user_id)
-                .eq('league_id', leagueId)
-                .maybeSingle();
-              
-              if (teamError) {
-                console.error('Error fetching team points for user:', member.user_id, teamError);
-                return {
-                  ...member,
-                  fantasy_points: 0
-                };
-              }
-              
-              return {
-                ...member,
-                fantasy_points: teamData?.total_points || 0
-              };
-            } catch (err) {
-              console.error('Error processing member points for user:', member.user_id, err);
-              return {
-                ...member,
-                fantasy_points: 0
-              };
-            }
-          })
-        );
+      console.log('Member profiles:', membersDataWithStandings.map(member => member.profiles));
 
-        console.log("Members with points data processed successfully");
-        setMembers(membersWithPoints);
-      }
+      // Transform the data to include calculated fields, handling null standings
+      const membersWithStats = membersDataWithStandings.map(member => {
+        const standings = member.league_standings?.[0] || { total_points: 0, matches_played: 0 };
+        return {
+          ...member,
+          fantasy_points: standings.total_points,
+          matches_played: standings.matches_played,
+          avg_points: standings.matches_played > 0 
+            ? Math.round(standings.total_points / standings.matches_played) 
+            : 0,
+          profiles: {
+            username: member.profiles.username || '',
+            full_name: member.profiles.full_name || null,
+            country: member.profiles.country || null
+          }
+        };
+      });
+
+      // The error occurs because the type of membersWithStats doesn't match the LeagueMember[] type
+      // We need to transform the data to match the expected type structure
+      setMembers(membersWithStats.map(member => ({
+        id: member.id,
+        user_id: member.user_id,
+        league_id: member.league_id,
+        is_admin: member.is_admin,
+        joined_at: member.joined_at,
+        fantasy_points: member.fantasy_points,
+        matches_played: member.matches_played,
+        avg_points: member.avg_points,
+        profiles: {
+          username: member.profiles.username,
+          full_name: member.profiles.full_name,
+          country: member.profiles.country
+        }
+      })));
+      setIsAdmin(!!membersWithStats.find(m => m.user_id === user.id)?.is_admin);
+      setIsMember(!!membersWithStats.find(m => m.user_id === user.id));
+
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      console.error('Error fetching league details:', err);
-      setError(`Failed to fetch league details: ${errorMessage}`);
+      console.error('Full error object:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -202,7 +265,7 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
       if (error) throw error;
       
       // Refresh the data
-      fetchLeagueDetails(user.id, leagueId);
+      fetchLeagueDetails();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
       console.error('Error joining league:', err);
@@ -386,26 +449,51 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
                   <tr>
                     <th className="py-3 px-4 text-left">Rank</th>
                     <th className="py-3 px-4 text-left">User</th>
-                    <th className="py-3 px-4 text-right">Points</th>
+                    <th className="py-3 px-4 text-right">Total Points</th>
+                    <th className="py-3 px-4 text-right">Avg Points/Match</th>
                   </tr>
                 </thead>
                 <tbody>
                   {members
                     .sort((a, b) => (b.fantasy_points || 0) - (a.fantasy_points || 0))
-                    .map((member, index) => (
-                      <tr key={member.id} className="border-t border-gray-200">
-                        <td className="py-3 px-4 text-left">{index + 1}</td>
-                        <td className="py-3 px-4 text-left">
-                          <div className="flex items-center">
-                            <span>{member.profiles.username}</span>
-                            {member.is_admin && (
-                              <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">Admin</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-right font-semibold">{member.fantasy_points || 0}</td>
-                      </tr>
-                    ))}
+                    .map((member, index) => {
+                      const matchesPlayed = member.matches_played || 0;
+                      const avgPoints = matchesPlayed > 0 
+                        ? Math.round((member.fantasy_points || 0) / matchesPlayed) 
+                        : 0;
+
+                      return (
+                        <tr 
+                          key={member.id} 
+                          className={`border-t border-gray-200 ${
+                            member.user_id === user?.id ? 'bg-green-50' : ''
+                          }`}
+                        >
+                          <td className="py-3 px-4 text-left">{index + 1}</td>
+                          <td className="py-3 px-4 text-left">
+                            <div className="flex items-center">
+                              <span>{member.profiles.username}</span>
+                              {member.is_admin && (
+                                <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                                  Admin
+                                </span>
+                              )}
+                              {member.user_id === user?.id && (
+                                <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
+                                  You
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-right font-semibold">
+                            {member.fantasy_points || 0}
+                          </td>
+                          <td className="py-3 px-4 text-right text-gray-600">
+                            {avgPoints}
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>
