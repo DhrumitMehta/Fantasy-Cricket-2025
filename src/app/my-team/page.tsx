@@ -217,19 +217,67 @@ const PitchView = ({
 export default function MyTeam() {
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [matchdayTeams, setMatchdayTeams] = useState<Record<string, Player[]>>({});
   const [playerPointsByMatch, setPlayerPointsByMatch] = useState<
     Record<string, PlayerPointsBreakdown>
   >({});
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
   const [viewMode, setViewMode] = useState<"pitch" | "list">("pitch");
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Load selected players from localStorage
+  // Modify the useEffect that loads the team
   useEffect(() => {
     try {
+      // Load default team from localStorage for future matches
       const savedTeam = JSON.parse(localStorage.getItem("myTeam") || "[]");
       const transformedTeam = savedTeam.map(transformPlayerKeys);
       setSelectedPlayers(transformedTeam);
+
+      // Load saved matchday teams
+      async function fetchMatchdayTeams() {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          console.error('User error:', userError);
+          return;
+        }
+
+        const { data: matchdayTeamsData, error: matchdayError } = await supabase
+          .from('matchday_teams')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (matchdayError) {
+          console.error('Error fetching matchday teams:', matchdayError);
+          return;
+        }
+
+        // Transform the data into a record of match_id -> players array
+        const teamsRecord: Record<string, Player[]> = {};
+        matchdayTeamsData.forEach(team => {
+          const players = Object.values(team.players).map(p => ({
+            Player: p.player_name,
+            Player_ID: p.player_id,
+            Role_Detail: p.role,
+            Team_Name: p.team,
+            // Add other required fields with default values
+            Country: "",
+            Player_Role: "",
+            Birth_Date: "",
+            Birth_Place: "",
+            Height: "",
+            Batting_Style: "",
+            Bowling_Style: "",
+            Team_ID: "",
+            Price: 0,
+          }));
+          teamsRecord[team.match_id] = players;
+        });
+
+        setMatchdayTeams(teamsRecord);
+      }
+
+      fetchMatchdayTeams();
     } catch (error) {
       console.error("Error loading team:", error);
       setSelectedPlayers([]);
@@ -292,10 +340,45 @@ export default function MyTeam() {
 
   const currentMatch = matches[currentMatchIndex];
 
+  // Update the getTeamForMatch function
+  const getTeamForMatch = (matchId: string): Player[] => {
+    // If the match has a saved team, use it
+    if (matchdayTeams[matchId]) {
+      return matchdayTeams[matchId];
+    }
+    
+    const matchDate = matches.find(m => m.id === matchId)?.match_date;
+    if (matchDate && new Date(matchDate) < new Date('2025-02-17T00:00:00Z')) {
+      // For past tournament matches without a saved team, find the last saved team before this match
+      const lastSavedTeam = matches
+        .filter(m => {
+          // Get matches before the current match
+          return new Date(m.match_date) < new Date(matchDate);
+        })
+        .sort((a, b) => {
+          // Sort by date descending to get the most recent first
+          return new Date(b.match_date).getTime() - new Date(a.match_date).getTime();
+        })
+        .find(m => matchdayTeams[m.id]); // Find the first match that has a saved team
+
+      if (lastSavedTeam) {
+        return matchdayTeams[lastSavedTeam.id];
+      }
+      
+      // If no previous saved team exists, return empty array
+      return [];
+    }
+    
+    // For future matches, return the current team from localStorage
+    return selectedPlayers;
+  };
+
+  // Update the stats calculation to use the correct team
   const getMatchStats = () => {
     if (!currentMatch) return { totalPoints: 0, averagePoints: 0, highestPoints: 0 };
 
-    const points = selectedPlayers.map(
+    const teamForMatch = getTeamForMatch(currentMatch.id);
+    const points = teamForMatch.map(
       (player) => playerPointsByMatch[player.Player]?.matches[currentMatch.id]?.total_points || 0
     );
 
@@ -308,7 +391,68 @@ export default function MyTeam() {
 
   const { totalPoints, averagePoints, highestPoints } = getMatchStats();
 
-  // Add new function to save team for a matchday
+  // Add this validation function
+  const validateTeam = (players: Player[]) => {
+    // Count players by role
+    const roleCounts = players.reduce((acc, player) => {
+      const role = player.Role_Detail.trim();
+      if (role.includes("WK")) acc.wicketKeeper++;
+      else if (role.includes("Batsman")) acc.batsmen++;
+      else if (role.includes("Allrounder")) acc.allRounders++;
+      else if (role.includes("Bowler")) acc.bowlers++;
+      return acc;
+    }, { wicketKeeper: 0, batsmen: 0, allRounders: 0, bowlers: 0 });
+
+    const errors = [];
+    
+    // Team size
+    if (players.length !== 11) {
+      errors.push(`Team must have exactly 11 players (currently has ${players.length})`);
+    }
+
+    // Wicket-keeper
+    if (roleCounts.wicketKeeper === 0) {
+      errors.push("Team must have at least 1 wicket-keeper");
+    } else if (roleCounts.wicketKeeper > 2) {
+      errors.push("Team cannot have more than 2 wicket-keepers");
+    }
+
+    // Batsmen
+    if (roleCounts.batsmen < 3) {
+      errors.push("Team must have at least 3 batsmen");
+    }
+
+    // All-rounders
+    if (roleCounts.allRounders < 1) {
+      errors.push("Team must have at least 1 all-rounder");
+    }
+
+    // Bowlers
+    if (roleCounts.bowlers < 3) {
+      errors.push("Team must have at least 3 bowlers");
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
+  // Update the hasMatchStarted function
+  const hasMatchStarted = (match: Match) => {
+    const matchDate = new Date(match.match_date);
+    const cutoffDate = new Date('2025-02-17T00:00:00Z'); // Set cutoff date to Feb 17, 2025
+    
+    // If match is before cutoff date, consider it as "started"
+    if (matchDate < cutoffDate) {
+      return true;
+    }
+    
+    // For matches after cutoff date, check if they've started based on current time
+    return matchDate < new Date();
+  };
+
+  // Update the saveTeamForMatchday function
   const saveTeamForMatchday = async () => {
     try {
       // Get current user
@@ -325,13 +469,24 @@ export default function MyTeam() {
         throw new Error('No match selected');
       }
 
+      // Check if match has started
+      if (hasMatchStarted(currentMatch)) {
+        throw new Error('Cannot modify team after match has started');
+      }
+
+      // Validate team composition
+      const validation = validateTeam(selectedPlayers);
+      if (!validation.isValid) {
+        throw new Error(`Team composition invalid:\n${validation.errors.join('\n')}`);
+      }
+
       // Calculate points for the current match
       const matchPoints = selectedPlayers.reduce((total, player) => {
         const playerMatchPoints = playerPointsByMatch[player.Player]?.matches[currentMatch.id]?.total_points || 0;
         return total + playerMatchPoints;
       }, 0);
 
-      // Create players dictionary with stringified data
+      // Create players dictionary
       const playersDict = selectedPlayers.reduce((acc, player) => {
         acc[player.Player_ID] = {
           player_name: player.Player,
@@ -349,8 +504,6 @@ export default function MyTeam() {
         points: matchPoints
       };
 
-      console.log('About to save team data:', teamData); // Debug log
-
       // First, check if a record exists
       const { data: existingTeam, error: checkError } = await supabase
         .from('matchday_teams')
@@ -359,14 +512,25 @@ export default function MyTeam() {
         .eq('match_id', currentMatch.id)
         .single();
 
-      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is the "not found" error code
+      if (checkError && checkError.code !== 'PGRST116') {
         console.error('Error checking existing team:', checkError);
         throw checkError;
       }
 
+      // If team exists, ask for confirmation
+      if (existingTeam) {
+        const confirmed = window.confirm(
+          'You already have a team saved for this match. Do you want to overwrite it?'
+        );
+        if (!confirmed) {
+          return;
+        }
+      }
+
+      setIsSaving(true);
+
       let result;
       if (existingTeam) {
-        // Update existing record
         result = await supabase
           .from('matchday_teams')
           .update(teamData)
@@ -374,7 +538,6 @@ export default function MyTeam() {
           .eq('match_id', currentMatch.id)
           .select();
       } else {
-        // Insert new record
         result = await supabase
           .from('matchday_teams')
           .insert(teamData)
@@ -386,17 +549,13 @@ export default function MyTeam() {
         throw result.error;
       }
 
-      console.log('Save successful:', result.data); // Debug log
       alert('Team saved successfully!');
 
     } catch (error: any) {
       console.error('Full error object:', error);
-      console.error('Error code:', error?.code);
-      console.error('Error message:', error?.message);
-      console.error('Error details:', error?.details);
-      
-      // Show more detailed error message
       alert(`Failed to save team: ${error?.message || 'Unknown error occurred'}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -442,9 +601,27 @@ export default function MyTeam() {
                     <p className="text-[#4ade80]">{currentMatch.teams.join(" vs ")}</p>
                     <button
                       onClick={saveTeamForMatchday}
-                      className="mt-2 px-4 py-2 bg-[#4ade80] text-gray-900 rounded-lg text-sm font-medium hover:bg-[#22c55e] transition-colors"
+                      disabled={isSaving || hasMatchStarted(currentMatch)}
+                      className={`mt-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                        ${hasMatchStarted(currentMatch)
+                          ? 'bg-gray-500 cursor-not-allowed'
+                          : isSaving
+                          ? 'bg-[#22c55e] cursor-wait'
+                          : 'bg-[#4ade80] hover:bg-[#22c55e]'}
+                        text-gray-900`}
                     >
-                      Save Team for this Match
+                      {isSaving ? (
+                        <span className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+                          Saving...
+                        </span>
+                      ) : hasMatchStarted(currentMatch) ? (
+                        new Date(currentMatch.match_date) < new Date('2025-02-17T00:00:00Z')
+                          ? 'Past Tournament Match'
+                          : 'Match Started'
+                      ) : (
+                        'Save Team for this Match'
+                      )}
                     </button>
                   </>
                 )}
@@ -571,7 +748,7 @@ export default function MyTeam() {
             {viewMode === "pitch" && currentMatch && (
               <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 border border-white/10">
                 <PitchView
-                  players={selectedPlayers}
+                  players={getTeamForMatch(currentMatch.id)}
                   currentMatch={currentMatch}
                   playerPointsByMatch={playerPointsByMatch}
                 />
