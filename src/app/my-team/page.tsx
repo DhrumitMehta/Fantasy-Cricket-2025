@@ -28,6 +28,14 @@ type PlayerPointsBreakdown = {
   totalPoints: number;
 };
 
+type MatchdayTeam = {
+  id: string;
+  user_id: string;
+  match_id: string;
+  players: Record<string, Player>;
+  points: number;
+};
+
 const transformPlayerKeys = (player: any): Player => ({
   Player: player.Player || player.player,
   Player_ID: player["Player ID"] || player.Player_ID || player.player_id,
@@ -300,6 +308,98 @@ export default function MyTeam() {
 
   const { totalPoints, averagePoints, highestPoints } = getMatchStats();
 
+  // Add new function to save team for a matchday
+  const saveTeamForMatchday = async () => {
+    try {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('User error:', userError);
+        throw userError;
+      }
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+
+      if (!currentMatch) {
+        throw new Error('No match selected');
+      }
+
+      // Calculate points for the current match
+      const matchPoints = selectedPlayers.reduce((total, player) => {
+        const playerMatchPoints = playerPointsByMatch[player.Player]?.matches[currentMatch.id]?.total_points || 0;
+        return total + playerMatchPoints;
+      }, 0);
+
+      // Create players dictionary with stringified data
+      const playersDict = selectedPlayers.reduce((acc, player) => {
+        acc[player.Player_ID] = {
+          player_name: player.Player,
+          player_id: player.Player_ID,
+          role: player.Role_Detail,
+          team: player.Team_Name
+        };
+        return acc;
+      }, {} as Record<string, any>);
+
+      const teamData = {
+        user_id: user.id,
+        match_id: currentMatch.id,
+        players: playersDict,
+        points: matchPoints
+      };
+
+      console.log('About to save team data:', teamData); // Debug log
+
+      // First, check if a record exists
+      const { data: existingTeam, error: checkError } = await supabase
+        .from('matchday_teams')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('match_id', currentMatch.id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is the "not found" error code
+        console.error('Error checking existing team:', checkError);
+        throw checkError;
+      }
+
+      let result;
+      if (existingTeam) {
+        // Update existing record
+        result = await supabase
+          .from('matchday_teams')
+          .update(teamData)
+          .eq('user_id', user.id)
+          .eq('match_id', currentMatch.id)
+          .select();
+      } else {
+        // Insert new record
+        result = await supabase
+          .from('matchday_teams')
+          .insert(teamData)
+          .select();
+      }
+
+      if (result.error) {
+        console.error('Database operation error:', result.error);
+        throw result.error;
+      }
+
+      console.log('Save successful:', result.data); // Debug log
+      alert('Team saved successfully!');
+
+    } catch (error: any) {
+      console.error('Full error object:', error);
+      console.error('Error code:', error?.code);
+      console.error('Error message:', error?.message);
+      console.error('Error details:', error?.details);
+      
+      // Show more detailed error message
+      alert(`Failed to save team: ${error?.message || 'Unknown error occurred'}`);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#1a1c2e] text-white">
       <div className="max-w-7xl mx-auto p-6 md:p-8">
@@ -338,7 +438,15 @@ export default function MyTeam() {
                   Matchday {currentMatchIndex + 1}
                 </h2>
                 {currentMatch && (
-                  <p className="text-[#4ade80]">{currentMatch.teams.join(" vs ")}</p>
+                  <>
+                    <p className="text-[#4ade80]">{currentMatch.teams.join(" vs ")}</p>
+                    <button
+                      onClick={saveTeamForMatchday}
+                      className="mt-2 px-4 py-2 bg-[#4ade80] text-gray-900 rounded-lg text-sm font-medium hover:bg-[#22c55e] transition-colors"
+                    >
+                      Save Team for this Match
+                    </button>
+                  </>
                 )}
               </div>
 
