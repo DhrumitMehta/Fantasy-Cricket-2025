@@ -441,15 +441,15 @@ export default function MyTeam() {
   // Update the hasMatchStarted function
   const hasMatchStarted = (match: Match) => {
     const matchDate = new Date(match.match_date);
-    const cutoffDate = new Date('2025-02-17T00:00:00Z'); // Set cutoff date to Feb 17, 2025
-    
-    // If match is before cutoff date, consider it as "started"
+    const cutoffDate = new Date('2025-02-17T00:00:00Z');
+
+    // Consider matches before the cutoff date as completed
     if (matchDate < cutoffDate) {
-      return true;
+      return true; // Completed Match
     }
-    
-    // For matches after cutoff date, check if they've started based on current time
-    return matchDate < new Date();
+
+    // Allow saving for matches after the cutoff date
+    return false; // Match can be saved
   };
 
   // Update the saveTeamForMatchday function
