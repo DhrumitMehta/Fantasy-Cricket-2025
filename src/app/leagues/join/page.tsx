@@ -24,7 +24,9 @@ export default function JoinLeague() {
 
     try {
       // Get user session
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) {
         setError("Please login to join a league");
         return;
@@ -32,9 +34,9 @@ export default function JoinLeague() {
 
       // First, get the league ID using the league code
       const { data: league, error: leagueError } = await supabase
-        .from('leagues')
-        .select('id')
-        .eq('join_code', leagueCode)
+        .from("leagues")
+        .select("id")
+        .eq("join_code", leagueCode)
         .single();
 
       if (leagueError || !league) {
@@ -44,31 +46,44 @@ export default function JoinLeague() {
 
       // Check if user is already a member
       const { data: existingMember } = await supabase
-        .from('user_leagues')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .eq('league_id', league.id)
+        .from("user_leagues")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .eq("league_id", league.id)
         .maybeSingle();
-        
+
       if (existingMember) {
         setError("You're already a member of this league");
         return;
       }
 
-      const unique_user_id = nanoid() 
-      
+      const unique_user_id = nanoid();
+
       // Add the user to the league
-      const { error: joinError } = await supabase
-        .from('user_leagues')
-        .insert({
-          id: unique_user_id,
+      const { error: joinError } = await supabase.from("user_leagues").insert({
+        id: unique_user_id,
+        user_id: session.user.id,
+        league_id: league.id,
+        is_admin: false,
+      });
+
+      if (joinError) throw joinError;
+
+      // Initialize or update league standings for this user
+      const { error: standingsError } = await supabase.from("league_standings").upsert(
+        {
           user_id: session.user.id,
           league_id: league.id,
-          is_admin: false
-        });
-        
-      if (joinError) throw joinError;
-      
+          total_points: 0,
+          matches_played: 0,
+        },
+        { onConflict: "league_id,user_id" }
+      );
+
+      if (standingsError) {
+        console.error("Error updating standings:", standingsError);
+      }
+
       alert("Successfully joined the league!");
       router.push(`/leagues/${league.id}`);
     } catch (error: any) {
@@ -114,7 +129,7 @@ export default function JoinLeague() {
                 placeholder="Enter league code"
               />
             </div>
-            
+
             <button
               type="submit"
               disabled={loading}
