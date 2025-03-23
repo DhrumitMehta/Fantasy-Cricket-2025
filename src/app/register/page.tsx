@@ -4,9 +4,8 @@ import Link from "next/link";
 import { useState, FormEvent } from "react";
 import { createClient, AuthError, Provider } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
-import countriesData from '../../../public/data/country_names.json';
-import cricketTeamsData from '../../../public/data/cricket_teams.json';
-
+import countriesData from "../../../public/data/country_names.json";
+import cricketTeamsData from "../../../public/data/cricket_teams.json";
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -18,6 +17,23 @@ const countries = countriesData.map((country) => country.name);
 
 // fetch crickteams list from the json in data.
 const cricketTeams = cricketTeamsData.map((team) => team.name);
+
+// Add animation styles
+const animationStyles = `
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  .animate-slideIn {
+    animation: slideIn 0.3s ease-out forwards;
+  }
+`;
 
 export default function Register() {
   const router = useRouter();
@@ -31,6 +47,11 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [popupType, setPopupType] = useState<"success" | "error">("success");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Sign up with email and password
   const handleSignUp = async (e: FormEvent) => {
@@ -46,21 +67,25 @@ export default function Register() {
     if (password !== confirmPassword) {
       setError("Passwords don't match");
       setLoading(false);
+      showNotification("Passwords don't match", "error");
       return;
     }
 
     // Validate password strength
     if (!passwordRegex.test(password)) {
-      setError("Password must be at least 6 characters long and include at least one lowercase letter, one uppercase letter, and one digit.");
+      setError(
+        "Password must be at least 6 characters long and include at least one lowercase letter, one uppercase letter, and one digit."
+      );
       setLoading(false);
+      showNotification("Password doesn't meet requirements", "error");
       return;
     }
-
 
     // Validate all fields are filled
     if (!email || !fullName || !username || !country || !favoriteTeam || !password) {
       setError("Please fill in all fields");
       setLoading(false);
+      showNotification("Please fill in all fields", "error");
       return;
     }
 
@@ -82,39 +107,35 @@ export default function Register() {
 
       if (signUpError) throw signUpError;
 
-      // // If signup is successful and we have a user ID, update the profile
-      // if (data.user) {
-      //   // Use upsert operation (update if exists, insert if not)
-      //   const { error: profileError } = await supabase.from("profiles").upsert(
-      //     [
-      //       {
-      //         id: data.user.id, // This is the primary key
-      //         full_name: fullName,
-      //         username: username,
-      //         country: country,
-      //         favorite_team: favoriteTeam,
-      //         updated_at: new Date().toISOString(),
-      //       },
-      //     ],
-      //     {
-      //       onConflict: "id", // Specify the conflict column
-      //       ignoreDuplicates: false, // Update the record if there's a conflict
-      //     }
-      //   );
-
-      //   if (profileError) {
-      //     console.error("Profile update error:", profileError);
-      //     throw profileError;
-      //   }
-      // }
-
       setSuccess(true);
+      showNotification(
+        "Registration successful! Please check your email to confirm your account.",
+        "success"
+      );
     } catch (error) {
       console.error("Registration error:", error);
-      setError(error instanceof Error ? error.message : "An unexpected error occurred");
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      setError(errorMessage);
+      showNotification(errorMessage, "error");
     } finally {
       setLoading(false);
     }
+  };
+
+  const showNotification = (message: string, type: "success" | "error") => {
+    setPopupMessage(message);
+    setPopupType(type);
+    setShowPopup(true);
+
+    // Auto-hide the popup after 5 seconds
+    setTimeout(() => {
+      setShowPopup(false);
+    }, 5000);
+  };
+
+  // Helper function to close the popup
+  const closePopup = () => {
+    setShowPopup(false);
   };
 
   // Sign up with third-party providers
@@ -145,8 +166,73 @@ export default function Register() {
     }
   };
 
+  // Toggle password visibility
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  // Toggle confirm password visibility
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
   return (
     <div className="min-h-screen bg-[#1a1c2e]">
+      <style jsx global>
+        {animationStyles}
+      </style>
+
+      {/* Popup notification */}
+      {showPopup && (
+        <div className="fixed top-5 right-5 z-50 max-w-md animate-slideIn">
+          <div
+            className={`rounded-lg shadow-lg p-4 flex items-start space-x-4 ${
+              popupType === "success"
+                ? "bg-[#4ade80]/20 border border-[#4ade80]/40 text-[#4ade80]"
+                : "bg-red-500/20 border border-red-500/40 text-red-400"
+            }`}
+          >
+            <div className="flex-shrink-0">
+              {popupType === "success" ? (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              ) : (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">{popupMessage}</p>
+            </div>
+            <button
+              onClick={closePopup}
+              className="flex-shrink-0 text-gray-400 hover:text-white transition-colors"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Header Section */}
         <div className="mb-12">
@@ -262,12 +348,13 @@ export default function Register() {
                       Select your country
                     </option>
                     {countries.map((country) => (
-                    <option 
-                      key={country} 
-                      value={country} 
-                      className="bg-[#1a1c2e] truncate overflow-hidden whitespace-nowrap">
-                    {country}
-                    </option>
+                      <option
+                        key={country}
+                        value={country}
+                        className="bg-[#1a1c2e] truncate overflow-hidden whitespace-nowrap"
+                      >
+                        {country}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -306,15 +393,60 @@ export default function Register() {
                   >
                     Password
                   </label>
-                  <input
-                    type="password"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-[#4ade80] focus:border-transparent transition-all"
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-[#4ade80] focus:border-transparent transition-all"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={togglePasswordVisibility}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#4ade80] transition-colors"
+                    >
+                      {showPassword ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Confirm Password */}
@@ -325,15 +457,60 @@ export default function Register() {
                   >
                     Confirm Password
                   </label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-[#4ade80] focus:border-transparent transition-all"
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      id="confirmPassword"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-[#4ade80] focus:border-transparent transition-all"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleConfirmPasswordVisibility}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#4ade80] transition-colors"
+                    >
+                      {showConfirmPassword ? (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 

@@ -412,6 +412,19 @@ export default function TransferMarket() {
               <option value="India">India</option>
               <option value="Overseas">Overseas</option>
             </select>
+
+            <select
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={filters.team}
+              onChange={(e) => setFilters({ ...filters, team: e.target.value })}
+            >
+              <option value="">All Teams</option>
+              {teams.map((team) => (
+                <option key={team} value={team}>
+                  {team}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Price Range Filter */}
