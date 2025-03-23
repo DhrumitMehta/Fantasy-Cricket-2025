@@ -32,6 +32,23 @@ type LeagueWithMemberCount = League & {
   is_admin: boolean;
 };
 
+// Add animation styles after supabase client initialization
+const animationStyles = `
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  .animate-slideIn {
+    animation: slideIn 0.3s ease-out forwards;
+  }
+`;
+
 export default function Leagues() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -39,6 +56,10 @@ export default function Leagues() {
   const [publicLeagues, setPublicLeagues] = useState<LeagueWithMemberCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Add these new state variables for the popup
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [popupType, setPopupType] = useState<"success" | "error">("success");
 
   useEffect(() => {
     const checkUser = async () => {
@@ -174,13 +195,30 @@ export default function Leagues() {
     }
   };
 
+  // Add this function to show notifications
+  const showNotification = (message: string, type: "success" | "error") => {
+    setPopupMessage(message);
+    setPopupType(type);
+    setShowPopup(true);
+
+    // Auto-hide the popup after 5 seconds
+    setTimeout(() => {
+      setShowPopup(false);
+    }, 5000);
+  };
+
+  // Helper function to close the popup
+  const closePopup = () => {
+    setShowPopup(false);
+  };
+
   // Function to copy league code to clipboard
   const copyLeagueCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    alert("League code copied to clipboard!");
+    showNotification("League code copied to clipboard!", "success");
   };
 
-  // Function to join a public league
+  // Function to join a public league - update to use the notification system
   const joinPublicLeague = async (leagueId: string) => {
     if (!user) return;
     setLoading(true);
@@ -195,7 +233,8 @@ export default function Leagues() {
         .maybeSingle();
 
       if (existingMember) {
-        alert("You're already a member of this league");
+        showNotification("You're already a member of this league", "error");
+        setLoading(false);
         return;
       }
 
@@ -224,11 +263,12 @@ export default function Leagues() {
         console.error("Error initializing standings:", standingsError);
       }
 
-      alert("Successfully joined the league!");
+      showNotification("Successfully joined the league!", "success");
       router.push(`/leagues/${leagueId}`);
     } catch (error: any) {
       console.error("Error joining league:", error);
       setError(error.message || "Failed to join the league");
+      showNotification(error.message || "Failed to join the league", "error");
     } finally {
       setLoading(false);
     }
@@ -236,6 +276,61 @@ export default function Leagues() {
 
   return (
     <div className="min-h-screen bg-[#1a1c2e] py-12">
+      <style jsx global>
+        {animationStyles}
+      </style>
+
+      {/* Popup notification */}
+      {showPopup && (
+        <div className="fixed top-5 right-5 z-50 max-w-md animate-slideIn">
+          <div
+            className={`rounded-lg shadow-lg p-4 flex items-start space-x-4 ${
+              popupType === "success"
+                ? "bg-[#4ade80]/20 border border-[#4ade80]/40 text-[#4ade80]"
+                : "bg-red-500/20 border border-red-500/40 text-red-400"
+            }`}
+          >
+            <div className="flex-shrink-0">
+              {popupType === "success" ? (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              ) : (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">{popupMessage}</p>
+            </div>
+            <button
+              onClick={closePopup}
+              className="flex-shrink-0 text-gray-400 hover:text-white transition-colors"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-white">Your Leagues</h1>
