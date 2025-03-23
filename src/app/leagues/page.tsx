@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient, User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { nanoid } from "nanoid";
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -11,9 +12,9 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 if (!supabaseUrl || !supabaseAnonKey) {
-    console.error("Supabase URL or Anon Key is missing");
-    // Handle this case appropriately
-  }
+  console.error("Supabase URL or Anon Key is missing");
+  // Handle this case appropriately
+}
 
 type League = {
   id: string;
@@ -41,12 +42,14 @@ export default function Leagues() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session?.user) {
         setUser(session.user);
         fetchLeagues(session.user.id);
       } else {
-        router.push('/'); // Redirect to home if not logged in
+        router.push("/"); // Redirect to home if not logged in
       }
     };
 
@@ -56,15 +59,16 @@ export default function Leagues() {
   const fetchLeagues = async (userId: string) => {
     setLoading(true);
     setError(null);
-  
+
     try {
       // Add console logs to track execution
       console.log("Fetching leagues for user:", userId);
-      
+
       // Fetch leagues the user is a member of
       const userLeaguesResponse = await supabase
-        .from('user_leagues')
-        .select(`
+        .from("user_leagues")
+        .select(
+          `
           league_id,
           is_admin,
           leagues:league_id (
@@ -77,89 +81,90 @@ export default function Leagues() {
             created_by,
             created_at
           )
-        `)
-        .eq('user_id', userId);
-      
+        `
+        )
+        .eq("user_id", userId);
+
       if (userLeaguesResponse.error) {
         console.error("User leagues error:", userLeaguesResponse.error);
         throw userLeaguesResponse.error;
       }
-      
+
       const userLeagues = userLeaguesResponse.data || [];
       console.log("User leagues fetched:", userLeagues.length);
-  
+
       // Fetch public leagues
       const publicLeaguesResponse = await supabase
-        .from('leagues')
-        .select('*')
-        .eq('is_private', false)
-        .order('created_at', { ascending: false });
-      
+        .from("leagues")
+        .select("*")
+        .eq("is_private", false)
+        .order("created_at", { ascending: false });
+
       if (publicLeaguesResponse.error) {
         console.error("Public leagues error:", publicLeaguesResponse.error);
         throw publicLeaguesResponse.error;
       }
-      
+
       const allPublicLeagues = publicLeaguesResponse.data || [];
       console.log("Public leagues fetched:", allPublicLeagues.length);
-  
+
       // Filter out leagues the user is already a member of
-      const userLeagueIds = userLeagues.map(ul => ul.league_id);
+      const userLeagueIds = userLeagues.map((ul) => ul.league_id);
       const filteredPublicLeagues = allPublicLeagues.filter(
-        league => !userLeagueIds.includes(league.id)
+        (league) => !userLeagueIds.includes(league.id)
       );
-  
+
       // Process member counts for each league with better error handling
       const leaguesWithCounts = await Promise.all(
         userLeagues.map(async (userLeague) => {
-          const league = userLeague.leagues as League;
+          const league = userLeague.leagues as any;
           if (!league) {
             console.error("Missing league data for league_id:", userLeague.league_id);
             return null; // Skip this league if data is missing
           }
-          
+
           const countResponse = await supabase
-            .from('user_leagues')
-            .select('*', { count: 'exact', head: true })
-            .eq('league_id', league.id);
-          
+            .from("user_leagues")
+            .select("*", { count: "exact", head: true })
+            .eq("league_id", league.id);
+
           if (countResponse.error) {
             console.error("Count error for league:", league.id, countResponse.error);
           }
-          
+
           return {
             ...league,
             member_count: countResponse.count || 0,
-            is_admin: userLeague.is_admin
+            is_admin: userLeague.is_admin,
           };
         })
       );
-  
+
       const publicLeaguesWithCounts = await Promise.all(
         filteredPublicLeagues.map(async (league) => {
           const countResponse = await supabase
-            .from('user_leagues')
-            .select('*', { count: 'exact', head: true })
-            .eq('league_id', league.id);
-          
+            .from("user_leagues")
+            .select("*", { count: "exact", head: true })
+            .eq("league_id", league.id);
+
           if (countResponse.error) {
             console.error("Count error for public league:", league.id, countResponse.error);
           }
-          
+
           return {
             ...league,
             member_count: countResponse.count || 0,
-            is_admin: false
+            is_admin: false,
           };
         })
       );
-  
+
       // Filter out any null values from the arrays
-      const validLeaguesWithCounts = leaguesWithCounts.filter(l => l !== null);
-      
+      const validLeaguesWithCounts = leaguesWithCounts.filter((l) => l !== null);
+
       setMyLeagues(validLeaguesWithCounts as LeagueWithMemberCount[]);
       setPublicLeagues(publicLeaguesWithCounts);
-      
+
       console.log("Successfully processed leagues");
     } catch (error: any) {
       console.error("Error in fetchLeagues:", error);
@@ -173,6 +178,60 @@ export default function Leagues() {
   const copyLeagueCode = (code: string) => {
     navigator.clipboard.writeText(code);
     alert("League code copied to clipboard!");
+  };
+
+  // Function to join a public league
+  const joinPublicLeague = async (leagueId: string) => {
+    if (!user) return;
+    setLoading(true);
+
+    try {
+      // Check if user is already a member
+      const { data: existingMember } = await supabase
+        .from("user_leagues")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("league_id", leagueId)
+        .maybeSingle();
+
+      if (existingMember) {
+        alert("You're already a member of this league");
+        return;
+      }
+
+      // Add the user to the league
+      const { error: joinError } = await supabase.from("user_leagues").insert({
+        id: nanoid(),
+        user_id: user.id,
+        league_id: leagueId,
+        is_admin: false,
+      });
+
+      if (joinError) throw joinError;
+
+      // Initialize league standings for this user
+      const { error: standingsError } = await supabase.from("league_standings").upsert(
+        {
+          user_id: user.id,
+          league_id: leagueId,
+          total_points: 0,
+          matches_played: 0,
+        },
+        { onConflict: "league_id,user_id" }
+      );
+
+      if (standingsError) {
+        console.error("Error initializing standings:", standingsError);
+      }
+
+      alert("Successfully joined the league!");
+      router.push(`/leagues/${leagueId}`);
+    } catch (error: any) {
+      console.error("Error joining league:", error);
+      setError(error.message || "Failed to join the league");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -300,6 +359,7 @@ export default function Leagues() {
                         onClick={() => {
                           // Implement join public league functionality
                           // This would be similar to join by code but without requiring the code
+                          joinPublicLeague(league.id);
                         }}
                         className="bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] text-center py-2 rounded-lg font-medium transition-all w-full"
                       >
