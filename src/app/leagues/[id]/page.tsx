@@ -57,6 +57,7 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showJoinCode, setShowJoinCode] = useState(false);
+  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -306,8 +307,13 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
     }
   };
 
-  const handleLeaveLeague = async () => {
+  const initiateLeaveLeague = () => {
     if (!user || isAdmin) return; // Admins can't leave directly
+    setShowLeaveConfirmation(true);
+  };
+
+  const confirmLeaveLeague = async () => {
+    if (!user || isAdmin) return;
 
     try {
       const { error } = await supabase
@@ -323,6 +329,8 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
       console.error("Error leaving league:", err);
       setError(`Failed to leave the league: ${errorMessage}`);
+    } finally {
+      setShowLeaveConfirmation(false);
     }
   };
 
@@ -501,7 +509,7 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
               )}
               {isMember && !isAdmin && (
                 <button
-                  onClick={handleLeaveLeague}
+                  onClick={initiateLeaveLeague}
                   className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg font-medium transition-all"
                 >
                   Leave League
@@ -597,6 +605,32 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
           </>
         )}
       </div>
+
+      {showLeaveConfirmation && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#1a1c2e] border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-semibold text-white mb-4">Leave League</h3>
+            <p className="text-gray-300 mb-6">
+              Are you sure you want to leave this league? You will lose your position in the
+              leaderboard.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowLeaveConfirmation(false)}
+                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLeaveLeague}
+                className="bg-red-500/80 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-medium transition-all"
+              >
+                Leave League
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
