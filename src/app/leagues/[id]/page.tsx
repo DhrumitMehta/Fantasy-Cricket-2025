@@ -4,6 +4,7 @@ import { createClient, User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { use } from "react";
+import PageLoadingIndicator from "@/components/PageLoadingIndicator";
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -356,8 +357,43 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-xl">Loading league details...</p>
+      <div className="min-h-screen bg-[#1a1c2e] py-12">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex justify-between items-center mb-8">
+            <div className="h-10 w-48 bg-white/5 rounded-lg animate-pulse"></div>
+            <div className="flex gap-2">
+              <div className="h-10 w-32 bg-white/5 rounded-lg animate-pulse"></div>
+            </div>
+          </div>
+
+          {/* League info skeleton */}
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 mb-8">
+            <div className="flex justify-between items-start">
+              <div className="w-full">
+                <div className="h-4 bg-white/5 rounded w-3/4 mb-4 animate-pulse"></div>
+                <div className="h-4 bg-white/5 rounded w-full mb-2 animate-pulse"></div>
+                <div className="h-4 bg-white/5 rounded w-2/3 mb-6 animate-pulse"></div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="h-16 bg-white/5 rounded-lg animate-pulse"></div>
+                  <div className="h-16 bg-white/5 rounded-lg animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Leaderboard skeleton */}
+          <div className="mb-8">
+            <div className="h-8 w-40 bg-white/5 rounded mb-4 animate-pulse"></div>
+            <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-4">
+              <div className="space-y-4">
+                <div className="h-8 bg-white/5 rounded w-full animate-pulse"></div>
+                <div className="h-8 bg-white/5 rounded w-full animate-pulse"></div>
+                <div className="h-8 bg-white/5 rounded w-full animate-pulse"></div>
+                <div className="h-8 bg-white/5 rounded w-full animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
