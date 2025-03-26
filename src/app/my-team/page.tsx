@@ -124,18 +124,9 @@ const PitchView = ({
       {/* Player Positions */}
       <div className="absolute inset-0">
         {/* Batsmen */}
-        <div className="absolute top-[15%] left-0 w-full flex justify-center gap-24">
-          {(playersByRole.batsman || []).slice(0, 3).map((player, idx) => (
-            <div key={player.Player_ID}>
-              <PlayerCard player={player} />
-            </div>
-          ))}
-        </div>
-
-        {/* Middle-order batsmen */}
-        <div className="absolute top-[35%] left-0 w-full flex justify-center gap-32">
-          {(playersByRole.batsman || []).slice(3, 5).map((player) => (
-            <div key={player.Player_ID}>
+        <div className="absolute top-[15%] left-0 w-full flex justify-center gap-12 flex-wrap px-8">
+          {(playersByRole.batsman || []).map((player, idx) => (
+            <div key={player.Player_ID} className="mb-4">
               <PlayerCard player={player} />
             </div>
           ))}
@@ -161,13 +152,8 @@ const PitchView = ({
         )}
 
         {/* All-rounders */}
-        <div className="absolute top-[65%] left-0 w-full flex justify-center gap-32">
-          {(playersByRole["batting-all-rounder"] || []).slice(0, 1).map((player) => (
-            <div key={player.Player_ID}>
-              <PlayerCard player={player} />
-            </div>
-          ))}
-          {(playersByRole["bowling-all-rounder"] || []).slice(0, 1).map((player) => (
+        <div className="absolute top-[65%] left-0 w-full flex justify-center gap-12 flex-wrap px-8">
+          {[...(playersByRole["batting-all-rounder"] || []), ...(playersByRole["bowling-all-rounder"] || [])].map((player) => (
             <div key={player.Player_ID}>
               <PlayerCard player={player} />
             </div>
@@ -175,8 +161,8 @@ const PitchView = ({
         </div>
 
         {/* Bowlers */}
-        <div className="absolute top-[85%] left-0 w-full flex justify-center gap-16">
-          {(playersByRole.bowler || []).slice(0, 4).map((player) => (
+        <div className="absolute top-[85%] left-0 w-full flex justify-center gap-8 flex-wrap px-8">
+          {(playersByRole.bowler || []).map((player) => (
             <div key={player.Player_ID}>
               <PlayerCard player={player} />
             </div>
@@ -209,6 +195,16 @@ const PitchView = ({
             {playersByRole.bowler?.length || 0}
           </span>
         </p>
+      </div>
+
+      {/* Debug display */}
+      <div className="absolute bottom-2 right-2 bg-black/70 text-white p-2 text-xs rounded-lg border border-white/10">
+        <p>Total Players: {players.length}</p>
+        <p>Displayed: {(playersByRole.batsman?.length || 0) + 
+                      (playersByRole["wicket-keeper"]?.length || 0) + 
+                      (playersByRole["batting-all-rounder"]?.length || 0) +
+                      (playersByRole["bowling-all-rounder"]?.length || 0) +
+                      (playersByRole.bowler?.length || 0)}</p>
       </div>
     </div>
   );
@@ -348,6 +344,7 @@ export default function MyTeam() {
     }
     
     const matchDate = matches.find(m => m.id === matchId)?.match_date;
+    
     if (matchDate && new Date(matchDate) < new Date('2025-02-17T00:00:00Z')) {
       // For past tournament matches without a saved team, find the last saved team before this match
       const lastSavedTeam = matches
@@ -373,18 +370,21 @@ export default function MyTeam() {
     return selectedPlayers;
   };
 
-  // Update the stats calculation to use the correct team
+  // Update the getMatchStats function to use the actual players for that match
   const getMatchStats = () => {
     if (!currentMatch) return { totalPoints: 0, averagePoints: 0, highestPoints: 0 };
 
+    // Get the team for this specific match
     const teamForMatch = getTeamForMatch(currentMatch.id);
+    
+    // Calculate points based on the players who were in the team for this match
     const points = teamForMatch.map(
       (player) => playerPointsByMatch[player.Player]?.matches[currentMatch.id]?.total_points || 0
     );
 
     const totalPoints = points.reduce((sum, p) => sum + p, 0);
     const averagePoints = points.length ? Math.round(totalPoints / points.length) : 0;
-    const highestPoints = Math.max(...points);
+    const highestPoints = points.length ? Math.max(...points) : 0;
 
     return { totalPoints, averagePoints, highestPoints };
   };
@@ -685,7 +685,7 @@ export default function MyTeam() {
             {/* List view */}
             {viewMode === "list" && currentMatch && (
               <div className="space-y-3">
-                {selectedPlayers.map((player) => {
+                {getTeamForMatch(currentMatch.id).map((player) => {
                   const matchPoints = playerPointsByMatch[player.Player]?.matches[currentMatch.id];
                   const isTopScorer =
                     matchPoints?.total_points === highestPoints && highestPoints > 0;
