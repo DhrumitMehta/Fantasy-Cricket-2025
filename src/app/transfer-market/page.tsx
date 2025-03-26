@@ -247,37 +247,53 @@ export default function TransferMarket() {
         setIsLoading(true);
         const { data, error } = await supabase
           .from('players')
-          .select('*');
+          .select(`
+            Player,
+            Player_ID,
+            Country,
+            Player_Role,
+            Role_Detail,
+            Birth_Date,
+            Birth_Place,
+            Height,
+            Batting_Style,
+            Bowling_Style,
+            Team_Name,
+            Team_ID,
+            Price
+          `);
         
         if (error) {
           console.error("Supabase error:", error);
           throw error;
         }
         
-        if (!data) {
+        console.log("Raw data from Supabase:", data);
+        
+        if (!data || data.length === 0) {
           console.warn("No data returned from Supabase");
           setPlayers([]);
           return;
         }
 
-        // Transform the data to match the Player interface
+        // Transform data to match the exact column names from your table
         const transformedPlayers = data.map(player => ({
-          Player: player.player_name || player.Player || "Unknown Player",
-          Player_ID: player.player_id || player.id || `temp-${Date.now()}`,
-          Country: player.country || player.Country || "",
-          Player_Role: player.player_role || player.Player_Role || "",
-          Role_Detail: player.role_detail || player.Role_Detail || "",
-          Birth_Date: player.birth_date || player.Birth_Date || "",
-          Birth_Place: player.birth_place || player.Birth_Place || "",
-          Height: player.height || player.Height || "",
-          Batting_Style: player.batting_style || player.Batting_Style || "",
-          Bowling_Style: player.bowling_style || player.Bowling_Style || "",
-          Team_Name: player.team_name || player.Team_Name || "",
-          Team_ID: player.team_id || player.Team_ID || "",
-          Price: parseFloat(player.price) || player.Price || 5.0,
+          Player: player.Player || "",
+          Player_ID: player.Player_ID || `temp-${Date.now()}`,
+          Country: player.Country || "",
+          Player_Role: player.Player_Role || "",
+          Role_Detail: player.Role_Detail || "",
+          Birth_Date: player.Birth_Date || "",
+          Birth_Place: player.Birth_Place || "",
+          Height: player.Height || "",
+          Batting_Style: player.Batting_Style || "",
+          Bowling_Style: player.Bowling_Style || "",
+          Team_Name: player.Team_Name || "",
+          Team_ID: player.Team_ID || "",
+          Price: Number(player.Price) || 5.0,
         }));
 
-        console.log("Fetched players:", transformedPlayers); // Debug log
+        console.log("Transformed players:", transformedPlayers);
         setPlayers(transformedPlayers);
       } catch (error) {
         console.error("Error fetching data:", error);

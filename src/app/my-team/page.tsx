@@ -410,10 +410,6 @@ export default function MyTeam() {
         Price: 0,
       }));
       
-      // Update captain and vice-captain when showing a saved team
-      setCaptainId(team.captain_id || null);
-      setViceCaptainId(team.vice_captain_id || null);
-      
       return players;
     }
     
@@ -434,8 +430,6 @@ export default function MyTeam() {
 
       if (lastSavedTeam) {
         const team = matchdayTeams[lastSavedTeam.id];
-        setCaptainId(team.captain_id || null);
-        setViceCaptainId(team.vice_captain_id || null);
         
         return Object.values(team.players).map(p => ({
           Player: p.player_name,
@@ -454,13 +448,20 @@ export default function MyTeam() {
         }));
       }
       
-      // If no previous saved team exists, return empty array
       return [];
     }
     
-    // For future matches, return the current team from localStorage
     return selectedPlayers;
   };
+
+  // Add a new useEffect to handle captain/vice-captain updates
+  useEffect(() => {
+    if (currentMatch && matchdayTeams[currentMatch.id]) {
+      const team = matchdayTeams[currentMatch.id];
+      setCaptainId(team.captain_id || null);
+      setViceCaptainId(team.vice_captain_id || null);
+    }
+  }, [currentMatch, matchdayTeams]);
 
   // Update the getMatchStats function to adjust points for captain and vice-captain
   const getMatchStats = () => {
