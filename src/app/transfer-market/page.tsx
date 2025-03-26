@@ -174,6 +174,7 @@ export default function TransferMarket() {
     max: 15,
     avg: 0,
   });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Helper function to transform player keys
   const transformPlayerKeys = (player: any): Player => {
@@ -386,12 +387,17 @@ export default function TransferMarket() {
       return;
     }
 
+    // Set loading state to true
+    setIsLoading(true);
+
     // Save to localStorage and update myTeam
     localStorage.setItem("myTeam", JSON.stringify(selectedPlayers));
     setMyTeam(selectedPlayers);
 
-    // Navigate to captain selection page instead of home
-    router.push("/captain-selection");
+    // Navigate to captain selection page with a slight delay to show loading state
+    setTimeout(() => {
+      router.push("/captain-selection");
+    }, 800);
   };
 
   // Helper function to group players by role with specific order
@@ -427,16 +433,53 @@ export default function TransferMarket() {
   return (
     <div className="h-screen flex flex-col">
       {/* Matches Ribbon */}
-      <div className="w-full bg-gradient-to-r from-green-800 to-green-700 p-2 overflow-hidden">
-        <h3 className="text-white font-bold mb-1 text-sm">Matches</h3>
-        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
-          {matches.length > 0 ? (
-            matches.map((match) => (
-              <MatchCard key={match.id} match={match} />
-            ))
-          ) : (
-            <div className="text-white/70 text-sm">Loading matches...</div>
-          )}
+      <div className="w-full bg-gradient-to-r from-green-800 to-green-700 p-2 overflow-hidden relative">
+        <div className="relative">
+          {/* Left scroll button */}
+          <button 
+            onClick={() => {
+              const container = document.getElementById('matches-container');
+              if (container) {
+                container.scrollLeft -= 300;
+              }
+            }}
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-r-lg p-2 z-10"
+            aria-label="Scroll left"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+          </button>
+          
+          {/* Matches container */}
+          <div 
+            id="matches-container"
+            className="flex gap-3 overflow-x-hidden pb-1 scroll-smooth px-8"
+          >
+            {matches.length > 0 ? (
+              matches.map((match) => (
+                <MatchCard key={match.id} match={match} />
+              ))
+            ) : (
+              <div className="text-white/70 text-sm">Loading matches...</div>
+            )}
+          </div>
+      
+          {/* Right scroll button */}
+          <button
+            onClick={() => {
+              const container = document.getElementById('matches-container');
+              if (container) {
+                container.scrollLeft += 300;
+              }
+            }}
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-l-lg p-2 z-10"
+            aria-label="Scroll right"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+            </svg>
+          </button>
         </div>
       </div>
       
@@ -454,19 +497,17 @@ export default function TransferMarket() {
           </button>
         </div>
 
-        {/* Stats Card */}
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="text-sm text-gray-500">Budget Remaining</div>
-              <div className="text-2xl font-bold text-green-600">
-                {(100 - totalTeamPrice).toFixed(1)}M
-              </div>
+        {/* Stats Card - More Compact */}
+        <div className="bg-white rounded-lg shadow-sm p-3 mb-4 flex justify-between">
+          <div className="flex items-center gap-2">
+            <div className="text-xs text-gray-500">Budget Remaining</div>
+            <div className="text-lg font-bold text-green-600">
+              {(100 - totalTeamPrice).toFixed(1)}M
             </div>
-            <div className="space-y-2">
-              <div className="text-sm text-gray-500">Players Selected</div>
-              <div className="text-2xl font-bold">{selectedPlayers.length}/11</div>
-            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="text-xs text-gray-500">Players Selected</div>
+            <div className="text-lg font-bold">{selectedPlayers.length}/11</div>
           </div>
         </div>
 
@@ -706,24 +747,26 @@ export default function TransferMarket() {
       </div>
 
       {/* Right Side - Cricket Pitch */}
-      <div className="w-1/2 h-full bg-gradient-to-br from-green-600 to-green-700 p-6">
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6">
-          <h2 className="text-xl font-bold text-white mb-4">Selected Squad</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/20 rounded-lg p-3">
-              <div className="text-sm text-white/70">Total Value</div>
-              <div className="text-2xl font-bold text-white">{totalTeamPrice.toFixed(1)}M</div>
+      <div className="w-1/2 h-full bg-gradient-to-br from-green-600 to-green-700 p-4">
+        {/* Smaller Selected Squad section */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 flex justify-between items-center">
+          <h2 className="text-base font-bold text-white">Selected Squad</h2>
+          <div className="flex gap-4">
+            <div className="bg-white/20 rounded-lg px-3 py-1.5 flex items-center gap-2">
+              <div className="text-xs text-white/70">Value:</div>
+              <div className="text-sm font-bold text-white">{totalTeamPrice.toFixed(1)}M</div>
             </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <div className="text-sm text-white/70">Overseas Players</div>
-              <div className="text-2xl font-bold text-white">
+            <div className="bg-white/20 rounded-lg px-3 py-1.5 flex items-center gap-2">
+              <div className="text-xs text-white/70">Overseas:</div>
+              <div className="text-sm font-bold text-white">
                 {selectedPlayers.filter((p) => p.Country !== "India").length}/4
               </div>
             </div>
           </div>
         </div>
 
-        <div className="relative w-full h-[calc(100%-8rem)] bg-gradient-to-b from-green-600 to-green-700 rounded-2xl overflow-hidden">
+        {/* Enlarged Pitch View */}
+        <div className="relative w-full h-[calc(100%-3.5rem)] bg-gradient-to-b from-green-600 to-green-700 rounded-xl overflow-hidden">
           {/* Pitch markings */}
           <div className="absolute inset-0">
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[85%] h-[90%] rounded-full border-2 border-white/30" />
@@ -823,10 +866,20 @@ export default function TransferMarket() {
               selectedPlayers.length === 11
                 ? "bg-red-600/70 hover:bg-red-700/80 text-white"
                 : "bg-red-500/30 text-white/50 cursor-not-allowed"
-            } transition-colors backdrop-blur-sm`}
-            disabled={selectedPlayers.length !== 11}
+            } transition-colors backdrop-blur-sm flex items-center gap-2`}
+            disabled={selectedPlayers.length !== 11 || isLoading}
           >
-            Confirm Squad
+            {isLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              </>
+            ) : (
+              "Confirm Squad"
+            )}
           </button>
           </div>
         </div>
