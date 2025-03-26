@@ -240,48 +240,59 @@ export default function TransferMarket() {
     fetchMatches();
   }, []);
 
-  // Fetch all players and initialize team on component mount
+  // Update the fetchPlayers function in the useEffect
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
-        // Fetch players with prices directly from JSON file
-        const playersResponse = await fetch("/data/players_with_prices.json");
-        if (!playersResponse.ok) throw new Error("Failed to fetch players");
-        const playersData = await playersResponse.json();
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('players')
+          .select('*');
+        
+        if (error) {
+          console.error("Supabase error:", error);
+          throw error;
+        }
+        
+        if (!data) {
+          console.warn("No data returned from Supabase");
+          setPlayers([]);
+          return;
+        }
 
-        // Transform players (prices are already included in the data)
-        const transformedPlayers = playersData.map(transformPlayerKeys);
+        // Transform the data to match the Player interface
+        const transformedPlayers = data.map(player => ({
+          Player: player.player_name || player.Player || "Unknown Player",
+          Player_ID: player.player_id || player.id || `temp-${Date.now()}`,
+          Country: player.country || player.Country || "",
+          Player_Role: player.player_role || player.Player_Role || "",
+          Role_Detail: player.role_detail || player.Role_Detail || "",
+          Birth_Date: player.birth_date || player.Birth_Date || "",
+          Birth_Place: player.birth_place || player.Birth_Place || "",
+          Height: player.height || player.Height || "",
+          Batting_Style: player.batting_style || player.Batting_Style || "",
+          Bowling_Style: player.bowling_style || player.Bowling_Style || "",
+          Team_Name: player.team_name || player.Team_Name || "",
+          Team_ID: player.team_id || player.Team_ID || "",
+          Price: parseFloat(player.price) || player.Price || 5.0,
+        }));
 
-        // Add validation to ensure all players have an ID
-        const validPlayers = transformedPlayers.filter((player: Player) => {
-          if (!player.Player_ID) {
-            console.warn("Player missing ID:", player);
-            return false;
-          }
-          return true;
-        });
-
-        setPlayers(validPlayers);
+        console.log("Fetched players:", transformedPlayers); // Debug log
+        setPlayers(transformedPlayers);
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchPlayers();
 
-    // Load existing team from localStorage with transformed keys and validation
+    // Load existing team from localStorage
     const savedTeam = localStorage.getItem("myTeam");
     if (savedTeam) {
       try {
-        const parsedTeam = JSON.parse(savedTeam)
-          .map(transformPlayerKeys)
-          .filter((player: Player) => {
-            if (!player.Player_ID) {
-              console.warn("Saved team player missing ID:", player);
-              return false;
-            }
-            return true;
-          });
+        const parsedTeam = JSON.parse(savedTeam);
         setMyTeam(parsedTeam);
         setSelectedPlayers(parsedTeam);
       } catch (error) {
