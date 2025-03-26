@@ -86,10 +86,7 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
   const fetchLeagueDetails = async () => {
     try {
       // Get current user
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!user) throw new Error("No user logged in");
 
@@ -106,88 +103,10 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
       }
       setLeague(leagueData);
 
-      // Fetch league members
-      const { data: membersData, error: membersError } = await supabase
-        .from("user_leagues")
-        .select("user_id")
-        .eq("league_id", leagueId);
-
-      if (membersError) {
-        console.error("Members error:", membersError);
-        throw membersError;
-      }
-
-      // Calculate total points for each member
-      for (const member of membersData) {
-        const { data: matchdayPoints, error: matchdayError } = await supabase
-          .from("matchday_teams")
-          .select("points")
-          .eq("user_id", member.user_id);
-
-        if (matchdayError) {
-          console.error("Matchday points error:", matchdayError);
-          throw matchdayError;
-        }
-
-        const totalPoints = matchdayPoints.reduce((sum, matchday) => sum + matchday.points, 0);
-        const matchesPlayed = matchdayPoints.length; // Count matches played
-
-        // Check if an entry exists in league_standings
-        const { data: standingsData, error: standingsError } = await supabase
-          .from("league_standings")
-          .select("id")
-          .eq("user_id", member.user_id)
-          .eq("league_id", leagueId)
-          .single();
-
-        if (standingsError && standingsError.code !== "PGRST116") {
-          // PGRST116 is the code for no rows found
-          console.error("Standings error:", standingsError);
-          throw standingsError;
-        }
-
-        // Insert a new entry if it doesn't exist
-        if (!standingsData) {
-          console.log("Inserting into league_standings:", {
-            user_id: member.user_id,
-            league_id: leagueId,
-            total_points: 0,
-            matches_played: 0,
-          });
-          const { error: insertError } = await supabase.from("league_standings").insert({
-            user_id: member.user_id,
-            league_id: leagueId,
-            total_points: 0, // Initialize with 0
-            matches_played: 0, // Initialize with 0
-          });
-
-          if (insertError) {
-            console.error("Insert standings error:", insertError.message || insertError);
-            throw insertError;
-          }
-        }
-
-        // Update the total_points in league_standings
-        const { error: updateError } = await supabase
-          .from("league_standings")
-          .update({
-            total_points: totalPoints,
-            matches_played: matchesPlayed,
-          })
-          .eq("user_id", member.user_id)
-          .eq("league_id", leagueId);
-
-        if (updateError) {
-          console.error("Update total points error:", updateError);
-          throw updateError;
-        }
-      }
-
-      // Fetch league members with their standings using LEFT JOIN
+      // Fetch league members with their profiles and standings in a single query
       const { data: membersDataWithStandings, error: membersStandingsError } = await supabase
         .from("user_leagues")
-        .select(
-          `
+        .select(`
           id,
           user_id,
           league_id,
@@ -198,71 +117,46 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
             full_name,
             country
           ),
-          league_standings (
+          league_standings!inner (
             total_points,
             matches_played
           )
-        `
-        )
+        `)
         .eq("league_id", leagueId);
 
       if (membersStandingsError) {
-        console.error(
-          "Members standings error:",
-          membersStandingsError.message || membersStandingsError
-        );
+        console.error("Members standings error:", membersStandingsError);
         throw membersStandingsError;
       }
 
-      console.log(
-        "Member profiles:",
-        membersDataWithStandings.map((member) => member.profiles)
-      );
-
-      // Transform the data to include calculated fields, handling null standings
-      const membersWithStats = membersDataWithStandings.map((member) => {
-        const standings = member.league_standings?.[0] || { total_points: 0, matches_played: 0 };
-        // The issue appears to be that profiles might be an array in the response
-        // Get the first profile if it's an array or use the object directly
+      // Transform the data
+      const transformedMembers = membersDataWithStandings.map(member => {
         const profileData = Array.isArray(member.profiles) ? member.profiles[0] : member.profiles;
+        const standings = member.league_standings?.[0] || { total_points: 0, matches_played: 0 };
 
         return {
-          ...member,
-          fantasy_points: standings.total_points,
-          matches_played: standings.matches_played,
-          avg_points:
-            standings.matches_played > 0
-              ? Math.round(standings.total_points / standings.matches_played)
-              : 0,
-          profiles: {
-            username: profileData?.username || "",
-            full_name: profileData?.full_name || null,
-            country: profileData?.country || null,
-          },
-        };
-      });
-
-      // The error occurs because the type of membersWithStats doesn't match the LeagueMember[] type
-      // We need to transform the data to match the expected type structure
-      setMembers(
-        membersWithStats.map((member) => ({
           id: member.id,
           user_id: member.user_id,
           league_id: member.league_id,
           is_admin: member.is_admin,
           joined_at: member.joined_at,
-          fantasy_points: member.fantasy_points,
-          matches_played: member.matches_played,
-          avg_points: member.avg_points,
+          fantasy_points: standings.total_points,
+          matches_played: standings.matches_played,
+          avg_points: standings.matches_played > 0 
+              ? Math.round(standings.total_points / standings.matches_played)
+              : 0,
           profiles: {
-            username: member.profiles.username,
-            full_name: member.profiles.full_name,
-            country: member.profiles.country,
-          },
-        }))
-      );
-      setIsAdmin(!!membersWithStats.find((m) => m.user_id === user.id)?.is_admin);
-      setIsMember(!!membersWithStats.find((m) => m.user_id === user.id));
+            username: profileData?.username || "Unknown",
+            full_name: profileData?.full_name || null,
+            country: profileData?.country || null,
+          }
+        };
+      });
+
+      setMembers(transformedMembers);
+      setIsAdmin(!!transformedMembers.find(m => m.user_id === user.id)?.is_admin);
+      setIsMember(!!transformedMembers.find(m => m.user_id === user.id));
+      
     } catch (err) {
       console.error("Full error object:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -316,18 +210,55 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
     if (!user || isAdmin) return;
 
     try {
-      const { error } = await supabase
-        .from("user_leagues")
+      console.log("Starting league leave process...");
+      
+      // First delete from league_standings
+      const { error: standingsError } = await supabase
+        .from('league_standings')
         .delete()
-        .eq("user_id", user.id)
-        .eq("league_id", leagueId);
+        .eq('user_id', user.id)
+        .eq('league_id', leagueId);
 
-      if (error) throw error;
+      if (standingsError) {
+        console.error("Error deleting league standings:", standingsError);
+        throw standingsError;
+      }
 
-      router.push("/"); // Redirect to home after leaving
+      // Then delete from user_leagues
+      const { error: deleteError } = await supabase
+        .from('user_leagues')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('league_id', leagueId);
+
+      if (deleteError) {
+        console.error("Error deleting from user_leagues:", deleteError);
+        throw deleteError;
+      }
+
+      // Verify the deletion
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('user_leagues')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('league_id', leagueId);
+
+      if (verifyError) {
+        console.error("Verification error:", verifyError);
+        throw verifyError;
+      }
+
+      if (verifyData && verifyData.length > 0) {
+        throw new Error("Failed to remove user from league");
+      }
+
+      // If we get here, the deletion was successful
+      console.log("Successfully left league");
+      router.push("/");
+
     } catch (err) {
+      console.error("Full error details:", err);
       const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
-      console.error("Error leaving league:", err);
       setError(`Failed to leave the league: ${errorMessage}`);
     } finally {
       setShowLeaveConfirmation(false);
