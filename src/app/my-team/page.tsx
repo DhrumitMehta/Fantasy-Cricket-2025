@@ -34,6 +34,8 @@ type MatchdayTeam = {
   match_id: string;
   players: Record<string, Player>;
   points: number;
+  captain_id?: string;
+  vice_captain_id?: string;
 };
 
 const transformPlayerKeys = (player: any): Player => ({
@@ -56,10 +58,18 @@ const PitchView = ({
   players = [],
   currentMatch,
   playerPointsByMatch = {},
+  captainId,
+  viceCaptainId,
+  onSetCaptain,
+  onSetViceCaptain
 }: {
   players: Player[];
   currentMatch: Match;
   playerPointsByMatch: Record<string, PlayerPointsBreakdown>;
+  captainId?: string | null;
+  viceCaptainId?: string | null;
+  onSetCaptain?: (playerId: string) => void;
+  onSetViceCaptain?: (playerId: string) => void;
 }) => {
   if (!players || !currentMatch) {
     return (
@@ -91,16 +101,42 @@ const PitchView = ({
     return acc;
   }, {} as Record<string, Player[]>);
 
-  const PlayerCard = ({ player }: { player: Player }) => {
+  const PlayerCard = ({ player, isCaptain, isViceCaptain, onSetCaptain, onSetViceCaptain, disableSelection }: { player: Player, isCaptain?: boolean, isViceCaptain?: boolean, onSetCaptain?: (playerId: string) => void, onSetViceCaptain?: (playerId: string) => void, disableSelection?: boolean }) => {
     const matchPoints = playerPointsByMatch[player.Player]?.matches[currentMatch.id];
+    const adjustedPoints = matchPoints ? 
+      (isCaptain ? matchPoints.total_points * 2 : 
+       isViceCaptain ? matchPoints.total_points * 1.5 : 
+       matchPoints.total_points) : 0;
 
     return (
       <div className="w-28 bg-white/10 backdrop-blur-lg rounded-lg p-2 shadow-lg border border-white/20 hover:border-[#4ade80]/50 hover:scale-105 transition-transform">
-        <p className="text-sm font-semibold text-center truncate text-white">{player.Player}</p>
+        <p className="text-sm font-semibold text-center truncate text-white">
+          {player.Player}
+          {isCaptain && <span className="ml-1 text-yellow-400">(C)</span>}
+          {isViceCaptain && <span className="ml-1 text-yellow-400">(VC)</span>}
+        </p>
         <p className="text-xs text-gray-400 text-center">{player.Role_Detail}</p>
+        
+        {!disableSelection && (
+          <div className="flex justify-center gap-1 mt-1">
+            <button 
+              onClick={() => onSetCaptain?.(player.Player_ID)}
+              className={`text-xs px-1 rounded ${isCaptain ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white'}`}
+            >
+              C
+            </button>
+            <button 
+              onClick={() => onSetViceCaptain?.(player.Player_ID)}
+              className={`text-xs px-1 rounded ${isViceCaptain ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white'}`}
+            >
+              VC
+            </button>
+          </div>
+        )}
+        
         {matchPoints ? (
           <p className="text-center font-bold mt-1 text-[#4ade80]">
-            {matchPoints.total_points} pts
+            {adjustedPoints.toFixed(1)} pts
           </p>
         ) : (
           <p className="text-center text-xs text-gray-500 mt-1">DNP</p>
@@ -127,7 +163,13 @@ const PitchView = ({
         <div className="absolute top-[15%] left-0 w-full flex justify-center gap-12 flex-wrap px-8">
           {(playersByRole.batsman || []).map((player, idx) => (
             <div key={player.Player_ID} className="mb-4">
-              <PlayerCard player={player} />
+              <PlayerCard
+                player={player}
+                isCaptain={player.Player_ID === captainId}
+                isViceCaptain={player.Player_ID === viceCaptainId}
+                onSetCaptain={onSetCaptain}
+                onSetViceCaptain={onSetViceCaptain}
+              />
             </div>
           ))}
         </div>
@@ -137,7 +179,13 @@ const PitchView = ({
           <div className="absolute top-[50%] left-0 w-full flex justify-center gap-32">
             {wicketKeepers.slice(0, 2).map((player) => (
               <div key={player.Player_ID}>
-                <PlayerCard player={player} />
+                <PlayerCard
+                  player={player}
+                  isCaptain={player.Player_ID === captainId}
+                  isViceCaptain={player.Player_ID === viceCaptainId}
+                  onSetCaptain={onSetCaptain}
+                  onSetViceCaptain={onSetViceCaptain}
+                />
               </div>
             ))}
           </div>
@@ -145,7 +193,13 @@ const PitchView = ({
           <div className="absolute top-[50%] left-1/2 transform -translate-x-1/2">
             {wicketKeepers.slice(0, 1).map((player) => (
               <div key={player.Player_ID}>
-                <PlayerCard player={player} />
+                <PlayerCard
+                  player={player}
+                  isCaptain={player.Player_ID === captainId}
+                  isViceCaptain={player.Player_ID === viceCaptainId}
+                  onSetCaptain={onSetCaptain}
+                  onSetViceCaptain={onSetViceCaptain}
+                />
               </div>
             ))}
           </div>
@@ -155,7 +209,13 @@ const PitchView = ({
         <div className="absolute top-[65%] left-0 w-full flex justify-center gap-12 flex-wrap px-8">
           {[...(playersByRole["batting-all-rounder"] || []), ...(playersByRole["bowling-all-rounder"] || [])].map((player) => (
             <div key={player.Player_ID}>
-              <PlayerCard player={player} />
+              <PlayerCard
+                player={player}
+                isCaptain={player.Player_ID === captainId}
+                isViceCaptain={player.Player_ID === viceCaptainId}
+                onSetCaptain={onSetCaptain}
+                onSetViceCaptain={onSetViceCaptain}
+              />
             </div>
           ))}
         </div>
@@ -164,7 +224,13 @@ const PitchView = ({
         <div className="absolute top-[85%] left-0 w-full flex justify-center gap-8 flex-wrap px-8">
           {(playersByRole.bowler || []).map((player) => (
             <div key={player.Player_ID}>
-              <PlayerCard player={player} />
+              <PlayerCard
+                player={player}
+                isCaptain={player.Player_ID === captainId}
+                isViceCaptain={player.Player_ID === viceCaptainId}
+                onSetCaptain={onSetCaptain}
+                onSetViceCaptain={onSetViceCaptain}
+              />
             </div>
           ))}
         </div>
@@ -213,7 +279,7 @@ const PitchView = ({
 export default function MyTeam() {
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
-  const [matchdayTeams, setMatchdayTeams] = useState<Record<string, Player[]>>({});
+  const [matchdayTeams, setMatchdayTeams] = useState<Record<string, MatchdayTeam>>({});
   const [playerPointsByMatch, setPlayerPointsByMatch] = useState<
     Record<string, PlayerPointsBreakdown>
   >({});
@@ -221,6 +287,8 @@ export default function MyTeam() {
   const [viewMode, setViewMode] = useState<"pitch" | "list">("pitch");
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [captainId, setCaptainId] = useState<string | null>(null);
+  const [viceCaptainId, setViceCaptainId] = useState<string | null>(null);
 
   // Modify the useEffect that loads the team
   useEffect(() => {
@@ -248,26 +316,10 @@ export default function MyTeam() {
           return;
         }
 
-        // Transform the data into a record of match_id -> players array
-        const teamsRecord: Record<string, Player[]> = {};
+        // Transform the data into a record of match_id -> matchday team
+        const teamsRecord: Record<string, MatchdayTeam> = {};
         matchdayTeamsData.forEach(team => {
-          const players = Object.values(team.players).map(p => ({
-            Player: p.player_name,
-            Player_ID: p.player_id,
-            Role_Detail: p.role,
-            Team_Name: p.team,
-            // Add other required fields with default values
-            Country: "",
-            Player_Role: "",
-            Birth_Date: "",
-            Birth_Place: "",
-            Height: "",
-            Batting_Style: "",
-            Bowling_Style: "",
-            Team_ID: "",
-            Price: 0,
-          }));
-          teamsRecord[team.match_id] = players;
+          teamsRecord[team.match_id] = team;
         });
 
         setMatchdayTeams(teamsRecord);
@@ -340,7 +392,29 @@ export default function MyTeam() {
   const getTeamForMatch = (matchId: string): Player[] => {
     // If the match has a saved team, use it
     if (matchdayTeams[matchId]) {
-      return matchdayTeams[matchId];
+      const team = matchdayTeams[matchId];
+      const players = Object.values(team.players).map(p => ({
+        Player: p.player_name,
+        Player_ID: p.player_id,
+        Role_Detail: p.role,
+        Team_Name: p.team,
+        // Add other required fields with default values
+        Country: "",
+        Player_Role: "",
+        Birth_Date: "",
+        Birth_Place: "",
+        Height: "",
+        Batting_Style: "",
+        Bowling_Style: "",
+        Team_ID: "",
+        Price: 0,
+      }));
+      
+      // Update captain and vice-captain when showing a saved team
+      setCaptainId(team.captain_id || null);
+      setViceCaptainId(team.vice_captain_id || null);
+      
+      return players;
     }
     
     const matchDate = matches.find(m => m.id === matchId)?.match_date;
@@ -359,7 +433,25 @@ export default function MyTeam() {
         .find(m => matchdayTeams[m.id]); // Find the first match that has a saved team
 
       if (lastSavedTeam) {
-        return matchdayTeams[lastSavedTeam.id];
+        const team = matchdayTeams[lastSavedTeam.id];
+        setCaptainId(team.captain_id || null);
+        setViceCaptainId(team.vice_captain_id || null);
+        
+        return Object.values(team.players).map(p => ({
+          Player: p.player_name,
+          Player_ID: p.player_id,
+          Role_Detail: p.role,
+          Team_Name: p.team,
+          Country: "",
+          Player_Role: "",
+          Birth_Date: "",
+          Birth_Place: "",
+          Height: "",
+          Batting_Style: "",
+          Bowling_Style: "",
+          Team_ID: "",
+          Price: 0,
+        }));
       }
       
       // If no previous saved team exists, return empty array
@@ -370,7 +462,7 @@ export default function MyTeam() {
     return selectedPlayers;
   };
 
-  // Update the getMatchStats function to use the actual players for that match
+  // Update the getMatchStats function to adjust points for captain and vice-captain
   const getMatchStats = () => {
     if (!currentMatch) return { totalPoints: 0, averagePoints: 0, highestPoints: 0 };
 
@@ -378,9 +470,17 @@ export default function MyTeam() {
     const teamForMatch = getTeamForMatch(currentMatch.id);
     
     // Calculate points based on the players who were in the team for this match
-    const points = teamForMatch.map(
-      (player) => playerPointsByMatch[player.Player]?.matches[currentMatch.id]?.total_points || 0
-    );
+    const points = teamForMatch.map(player => {
+      const basePoints = playerPointsByMatch[player.Player]?.matches[currentMatch.id]?.total_points || 0;
+      
+      if (player.Player_ID === captainId) {
+        return basePoints * 2; // Captain gets 2x points
+      } else if (player.Player_ID === viceCaptainId) {
+        return basePoints * 1.5; // Vice-captain gets 1.5x points
+      }
+      
+      return basePoints;
+    });
 
     const totalPoints = points.reduce((sum, p) => sum + p, 0);
     const averagePoints = points.length ? Math.round(totalPoints / points.length) : 0;
@@ -479,11 +579,31 @@ export default function MyTeam() {
       if (!validation.isValid) {
         throw new Error(`Team composition invalid:\n${validation.errors.join('\n')}`);
       }
+      
+      // Validate captain and vice-captain
+      if (!captainId) {
+        throw new Error('You must select a captain');
+      }
+      
+      if (!viceCaptainId) {
+        throw new Error('You must select a vice-captain');
+      }
+      
+      if (captainId === viceCaptainId) {
+        throw new Error('Captain and vice-captain must be different players');
+      }
 
-      // Calculate points for the current match
+      // Calculate points for the current match (with captain and vice-captain multipliers)
       const matchPoints = selectedPlayers.reduce((total, player) => {
-        const playerMatchPoints = playerPointsByMatch[player.Player]?.matches[currentMatch.id]?.total_points || 0;
-        return total + playerMatchPoints;
+        const basePoints = playerPointsByMatch[player.Player]?.matches[currentMatch.id]?.total_points || 0;
+        
+        if (player.Player_ID === captainId) {
+          return total + (basePoints * 2);
+        } else if (player.Player_ID === viceCaptainId) {
+          return total + (basePoints * 1.5);
+        }
+        
+        return total + basePoints;
       }, 0);
 
       // Create players dictionary
@@ -501,7 +621,9 @@ export default function MyTeam() {
         user_id: user.id,
         match_id: currentMatch.id,
         players: playersDict,
-        points: matchPoints
+        points: matchPoints,
+        captain_id: captainId,
+        vice_captain_id: viceCaptainId
       };
 
       // First, check if a record exists
@@ -557,6 +679,23 @@ export default function MyTeam() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Add functions to handle captain and vice-captain selection
+  const handleSetCaptain = (playerId: string) => {
+    // If selecting current vice-captain as captain, swap them
+    if (playerId === viceCaptainId) {
+      setViceCaptainId(captainId);
+    }
+    setCaptainId(playerId);
+  };
+
+  const handleSetViceCaptain = (playerId: string) => {
+    // If selecting current captain as vice-captain, swap them
+    if (playerId === captainId) {
+      setCaptainId(viceCaptainId);
+    }
+    setViceCaptainId(playerId);
   };
 
   return (
@@ -687,8 +826,18 @@ export default function MyTeam() {
               <div className="space-y-3">
                 {getTeamForMatch(currentMatch.id).map((player) => {
                   const matchPoints = playerPointsByMatch[player.Player]?.matches[currentMatch.id];
-                  const isTopScorer =
-                    matchPoints?.total_points === highestPoints && highestPoints > 0;
+                  const isCaptain = player.Player_ID === captainId;
+                  const isViceCaptain = player.Player_ID === viceCaptainId;
+                  const adjustedPoints = matchPoints ? 
+                    (isCaptain ? matchPoints.total_points * 2 : 
+                     isViceCaptain ? matchPoints.total_points * 1.5 : 
+                     matchPoints.total_points) : 0;
+                  const isTopScorer = adjustedPoints === Math.max(...getTeamForMatch(currentMatch.id).map(p => {
+                    const pts = playerPointsByMatch[p.Player]?.matches[currentMatch.id]?.total_points || 0;
+                    if (p.Player_ID === captainId) return pts * 2;
+                    if (p.Player_ID === viceCaptainId) return pts * 1.5;
+                    return pts;
+                  })) && adjustedPoints > 0;
 
                   return (
                     <div
@@ -702,42 +851,74 @@ export default function MyTeam() {
                       <div className="flex items-center space-x-4">
                         {isTopScorer && <Trophy className="w-5 h-5 text-[#4ade80]" />}
                         <div>
-                          <p className="font-medium text-white">{player.Player}</p>
+                          <p className="font-medium text-white flex items-center gap-1">
+                            {player.Player}
+                            {isCaptain && <span className="text-yellow-400 font-bold">(C)</span>}
+                            {isViceCaptain && <span className="text-yellow-400 font-bold">(VC)</span>}
+                          </p>
                           <p className="text-sm text-gray-400">
                             {player.Role_Detail} • {player.Team_Name}
                           </p>
                         </div>
                       </div>
 
-                      {matchPoints ? (
-                        <div className="text-right">
-                          <p className="font-bold text-lg text-white">
-                            {matchPoints.total_points} pts
-                          </p>
-                          <div className="text-sm text-gray-400 flex gap-3">
-                            <span>
-                              Bat:{" "}
-                              <span className="text-[#4ade80]">{matchPoints.batting_points}</span>
-                            </span>
-                            <span>
-                              Bowl:{" "}
-                              <span className="text-[#4ade80]">{matchPoints.bowling_points}</span>
-                            </span>
-                            <span>
-                              Field:{" "}
-                              <span className="text-[#4ade80]">{matchPoints.fielding_points}</span>
-                            </span>
-                            <span>
-                              POTM:{" "}
-                              <span className="text-[#4ade80]">{matchPoints.potm_points}</span>
-                            </span>
+                      <div className="flex items-center gap-3">
+                        {!hasMatchStarted(currentMatch) && (
+                          <div className="flex gap-1">
+                            <button 
+                              onClick={() => handleSetCaptain(player.Player_ID)}
+                              className={`px-2 py-1 rounded text-xs ${
+                                isCaptain ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white hover:bg-gray-600'
+                              }`}
+                            >
+                              Captain
+                            </button>
+                            <button 
+                              onClick={() => handleSetViceCaptain(player.Player_ID)}
+                              className={`px-2 py-1 rounded text-xs ${
+                                isViceCaptain ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white hover:bg-gray-600'
+                              }`}
+                            >
+                              Vice Captain
+                            </button>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="text-gray-400 bg-white/5 px-3 py-1 rounded-lg text-sm">
-                          Did not play
-                        </div>
-                      )}
+                        )}
+
+                        {matchPoints ? (
+                          <div className="text-right">
+                            <p className="font-bold text-lg text-white">
+                              {adjustedPoints.toFixed(1)} pts
+                              {(isCaptain || isViceCaptain) && (
+                                <span className="text-xs text-gray-400 ml-1">
+                                  ({matchPoints.total_points}×{isCaptain ? '2' : '1.5'})
+                                </span>
+                              )}
+                            </p>
+                            <div className="text-sm text-gray-400 flex gap-3">
+                              <span>
+                                Bat:{" "}
+                                <span className="text-[#4ade80]">{matchPoints.batting_points}</span>
+                              </span>
+                              <span>
+                                Bowl:{" "}
+                                <span className="text-[#4ade80]">{matchPoints.bowling_points}</span>
+                              </span>
+                              <span>
+                                Field:{" "}
+                                <span className="text-[#4ade80]">{matchPoints.fielding_points}</span>
+                              </span>
+                              <span>
+                                POTM:{" "}
+                                <span className="text-[#4ade80]">{matchPoints.potm_points}</span>
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-gray-400 bg-white/5 px-3 py-1 rounded-lg text-sm">
+                            Did not play
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -751,6 +932,10 @@ export default function MyTeam() {
                   players={getTeamForMatch(currentMatch.id)}
                   currentMatch={currentMatch}
                   playerPointsByMatch={playerPointsByMatch}
+                  captainId={captainId}
+                  viceCaptainId={viceCaptainId}
+                  onSetCaptain={hasMatchStarted(currentMatch) ? undefined : handleSetCaptain}
+                  onSetViceCaptain={hasMatchStarted(currentMatch) ? undefined : handleSetViceCaptain}
                 />
               </div>
             )}
