@@ -32,7 +32,15 @@ type MatchdayTeam = {
   id: string;
   user_id: string;
   match_id: string;
-  players: Record<string, Player>;
+  players: Record<
+    string,
+    {
+      player_name: string;
+      player_id: string;
+      role: string;
+      team: string;
+    }
+  >;
   points: number;
   captain_id?: string;
   vice_captain_id?: string;
@@ -61,7 +69,7 @@ const PitchView = ({
   captainId,
   viceCaptainId,
   onSetCaptain,
-  onSetViceCaptain
+  onSetViceCaptain,
 }: {
   players: Player[];
   currentMatch: Match;
@@ -101,12 +109,29 @@ const PitchView = ({
     return acc;
   }, {} as Record<string, Player[]>);
 
-  const PlayerCard = ({ player, isCaptain, isViceCaptain, onSetCaptain, onSetViceCaptain, disableSelection }: { player: Player, isCaptain?: boolean, isViceCaptain?: boolean, onSetCaptain?: (playerId: string) => void, onSetViceCaptain?: (playerId: string) => void, disableSelection?: boolean }) => {
+  const PlayerCard = ({
+    player,
+    isCaptain,
+    isViceCaptain,
+    onSetCaptain,
+    onSetViceCaptain,
+    disableSelection,
+  }: {
+    player: Player;
+    isCaptain?: boolean;
+    isViceCaptain?: boolean;
+    onSetCaptain?: (playerId: string) => void;
+    onSetViceCaptain?: (playerId: string) => void;
+    disableSelection?: boolean;
+  }) => {
     const matchPoints = playerPointsByMatch[player.Player]?.matches[currentMatch.id];
-    const adjustedPoints = matchPoints ? 
-      (isCaptain ? matchPoints.total_points * 2 : 
-       isViceCaptain ? matchPoints.total_points * 1.5 : 
-       matchPoints.total_points) : 0;
+    const adjustedPoints = matchPoints
+      ? isCaptain
+        ? matchPoints.total_points * 2
+        : isViceCaptain
+        ? matchPoints.total_points * 1.5
+        : matchPoints.total_points
+      : 0;
 
     return (
       <div className="w-28 bg-white/10 backdrop-blur-lg rounded-lg p-2 shadow-lg border border-white/20 hover:border-[#4ade80]/50 hover:scale-105 transition-transform">
@@ -116,30 +141,34 @@ const PitchView = ({
           {isViceCaptain && <span className="ml-1 text-yellow-400">(VC)</span>}
         </p>
         <p className="text-xs text-gray-400 text-center">{player.Role_Detail}</p>
-        
+
         {!disableSelection && (
           <div className="flex justify-center gap-1 mt-1">
-            <button 
+            <button
               onClick={() => onSetCaptain?.(player.Player_ID)}
-              className={`text-xs px-1 rounded ${isCaptain ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white'}`}
+              className={`text-xs px-1 rounded ${
+                isCaptain ? "bg-yellow-400 text-black" : "bg-gray-700 text-white"
+              }`}
             >
               C
             </button>
-            <button 
+            <button
               onClick={() => onSetViceCaptain?.(player.Player_ID)}
-              className={`text-xs px-1 rounded ${isViceCaptain ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white'}`}
+              className={`text-xs px-1 rounded ${
+                isViceCaptain ? "bg-yellow-400 text-black" : "bg-gray-700 text-white"
+              }`}
             >
               VC
             </button>
           </div>
         )}
-        
+
         {matchPoints ? (
           <p className="text-center font-bold mt-1 text-[#4ade80]">
             {adjustedPoints.toFixed(1)} pts
           </p>
         ) : (
-          <p className="text-center text-xs text-gray-500 mt-1">DNP</p>
+          <p className="text-center text-xs text-gray-50 mt-1">DNP</p>
         )}
       </div>
     );
@@ -207,7 +236,10 @@ const PitchView = ({
 
         {/* All-rounders */}
         <div className="absolute top-[65%] left-0 w-full flex justify-center gap-12 flex-wrap px-8">
-          {[...(playersByRole["batting-all-rounder"] || []), ...(playersByRole["bowling-all-rounder"] || [])].map((player) => (
+          {[
+            ...(playersByRole["batting-all-rounder"] || []),
+            ...(playersByRole["bowling-all-rounder"] || []),
+          ].map((player) => (
             <div key={player.Player_ID}>
               <PlayerCard
                 player={player}
@@ -266,11 +298,14 @@ const PitchView = ({
       {/* Debug display */}
       <div className="absolute bottom-2 right-2 bg-black/70 text-white p-2 text-xs rounded-lg border border-white/10">
         <p>Total Players: {players.length}</p>
-        <p>Displayed: {(playersByRole.batsman?.length || 0) + 
-                      (playersByRole["wicket-keeper"]?.length || 0) + 
-                      (playersByRole["batting-all-rounder"]?.length || 0) +
-                      (playersByRole["bowling-all-rounder"]?.length || 0) +
-                      (playersByRole.bowler?.length || 0)}</p>
+        <p>
+          Displayed:{" "}
+          {(playersByRole.batsman?.length || 0) +
+            (playersByRole["wicket-keeper"]?.length || 0) +
+            (playersByRole["batting-all-rounder"]?.length || 0) +
+            (playersByRole["bowling-all-rounder"]?.length || 0) +
+            (playersByRole.bowler?.length || 0)}
+        </p>
       </div>
     </div>
   );
@@ -292,44 +327,72 @@ export default function MyTeam() {
 
   // Modify the useEffect that loads the team
   useEffect(() => {
-    try {
-      // Load default team from localStorage for future matches
-      const savedTeam = JSON.parse(localStorage.getItem("myTeam") || "[]");
-      const transformedTeam = savedTeam.map(transformPlayerKeys);
-      setSelectedPlayers(transformedTeam);
-
-      // Load saved matchday teams
-      async function fetchMatchdayTeams() {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+    async function fetchUserTeamData() {
+      setLoading(true);
+      try {
+        // Get current user
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
         if (userError || !user) {
-          console.error('User error:', userError);
+          console.error("User authentication error:", userError);
+          setLoading(false);
           return;
         }
 
+        // Fetch the user's team from Supabase
+        const { data: userData, error: teamError } = await supabase
+          .from("user_teams")
+          .select("team_data, captain_id, vice_captain_id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (teamError) {
+          console.error("Error fetching user team data:", teamError);
+          setLoading(false);
+          return;
+        }
+
+        if (userData && userData.team_data) {
+          // We have team data in Supabase
+          const transformedTeam = userData.team_data.map(transformPlayerKeys);
+          setSelectedPlayers(transformedTeam);
+
+          // Set captain and vice-captain IDs if available
+          if (userData.captain_id) setCaptainId(userData.captain_id);
+          if (userData.vice_captain_id) setViceCaptainId(userData.vice_captain_id);
+        } else {
+          console.warn("No team data found in database for user:", user.id);
+          setSelectedPlayers([]);
+        }
+
+        // Load saved matchday teams
         const { data: matchdayTeamsData, error: matchdayError } = await supabase
-          .from('matchday_teams')
-          .select('*')
-          .eq('user_id', user.id);
+          .from("matchday_teams")
+          .select("*")
+          .eq("user_id", user.id);
 
         if (matchdayError) {
-          console.error('Error fetching matchday teams:', matchdayError);
-          return;
+          console.error("Error fetching matchday teams:", matchdayError);
+        } else {
+          // Transform the data into a record of match_id -> matchday team
+          const teamsRecord: Record<string, MatchdayTeam> = {};
+          matchdayTeamsData.forEach((team) => {
+            teamsRecord[team.match_id] = team;
+          });
+
+          setMatchdayTeams(teamsRecord);
         }
-
-        // Transform the data into a record of match_id -> matchday team
-        const teamsRecord: Record<string, MatchdayTeam> = {};
-        matchdayTeamsData.forEach(team => {
-          teamsRecord[team.match_id] = team;
-        });
-
-        setMatchdayTeams(teamsRecord);
+      } catch (error) {
+        console.error("Error loading team:", error);
+        setSelectedPlayers([]);
+      } finally {
+        setLoading(false);
       }
-
-      fetchMatchdayTeams();
-    } catch (error) {
-      console.error("Error loading team:", error);
-      setSelectedPlayers([]);
     }
+
+    fetchUserTeamData();
   }, []);
 
   // Fetch matches and points data
@@ -393,7 +456,7 @@ export default function MyTeam() {
     // If the match has a saved team, use it
     if (matchdayTeams[matchId]) {
       const team = matchdayTeams[matchId];
-      const players = Object.values(team.players).map(p => ({
+      const players = Object.values(team.players).map((p) => ({
         Player: p.player_name,
         Player_ID: p.player_id,
         Role_Detail: p.role,
@@ -409,16 +472,16 @@ export default function MyTeam() {
         Team_ID: "",
         Price: 0,
       }));
-      
+
       return players;
     }
-    
-    const matchDate = matches.find(m => m.id === matchId)?.match_date;
-    
-    if (matchDate && new Date(matchDate) < new Date('2025-02-17T00:00:00Z')) {
+
+    const matchDate = matches.find((m) => m.id === matchId)?.match_date;
+
+    if (matchDate && new Date(matchDate) < new Date("2025-02-17T00:00:00Z")) {
       // For past tournament matches without a saved team, find the last saved team before this match
       const lastSavedTeam = matches
-        .filter(m => {
+        .filter((m) => {
           // Get matches before the current match
           return new Date(m.match_date) < new Date(matchDate);
         })
@@ -426,12 +489,12 @@ export default function MyTeam() {
           // Sort by date descending to get the most recent first
           return new Date(b.match_date).getTime() - new Date(a.match_date).getTime();
         })
-        .find(m => matchdayTeams[m.id]); // Find the first match that has a saved team
+        .find((m) => matchdayTeams[m.id]); // Find the first match that has a saved team
 
       if (lastSavedTeam) {
         const team = matchdayTeams[lastSavedTeam.id];
-        
-        return Object.values(team.players).map(p => ({
+
+        return Object.values(team.players).map((p) => ({
           Player: p.player_name,
           Player_ID: p.player_id,
           Role_Detail: p.role,
@@ -447,10 +510,9 @@ export default function MyTeam() {
           Price: 0,
         }));
       }
-      
-      return [];
     }
-    
+
+    // Always return the selected players if no match-specific team is found
     return selectedPlayers;
   };
 
@@ -469,17 +531,18 @@ export default function MyTeam() {
 
     // Get the team for this specific match
     const teamForMatch = getTeamForMatch(currentMatch.id);
-    
+
     // Calculate points based on the players who were in the team for this match
-    const points = teamForMatch.map(player => {
-      const basePoints = playerPointsByMatch[player.Player]?.matches[currentMatch.id]?.total_points || 0;
-      
+    const points = teamForMatch.map((player) => {
+      const basePoints =
+        playerPointsByMatch[player.Player]?.matches[currentMatch.id]?.total_points || 0;
+
       if (player.Player_ID === captainId) {
         return basePoints * 2; // Captain gets 2x points
       } else if (player.Player_ID === viceCaptainId) {
         return basePoints * 1.5; // Vice-captain gets 1.5x points
       }
-      
+
       return basePoints;
     });
 
@@ -495,17 +558,20 @@ export default function MyTeam() {
   // Add this validation function
   const validateTeam = (players: Player[]) => {
     // Count players by role
-    const roleCounts = players.reduce((acc, player) => {
-      const role = player.Role_Detail.trim();
-      if (role.includes("WK")) acc.wicketKeeper++;
-      else if (role.includes("Batsman")) acc.batsmen++;
-      else if (role.includes("Allrounder")) acc.allRounders++;
-      else if (role.includes("Bowler")) acc.bowlers++;
-      return acc;
-    }, { wicketKeeper: 0, batsmen: 0, allRounders: 0, bowlers: 0 });
+    const roleCounts = players.reduce(
+      (acc, player) => {
+        const role = player.Role_Detail.trim();
+        if (role.includes("WK")) acc.wicketKeeper++;
+        else if (role.includes("Batsman")) acc.batsmen++;
+        else if (role.includes("Allrounder")) acc.allRounders++;
+        else if (role.includes("Bowler")) acc.bowlers++;
+        return acc;
+      },
+      { wicketKeeper: 0, batsmen: 0, allRounders: 0, bowlers: 0 }
+    );
 
     const errors = [];
-    
+
     // Team size
     if (players.length !== 11) {
       errors.push(`Team must have exactly 11 players (currently has ${players.length})`);
@@ -535,14 +601,14 @@ export default function MyTeam() {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   };
 
   // Update the hasMatchStarted function
   const hasMatchStarted = (match: Match) => {
     const matchDate = new Date(match.match_date);
-    const cutoffDate = new Date('2025-02-17T00:00:00Z');
+    const cutoffDate = new Date("2025-02-17T00:00:00Z");
 
     // Consider matches before the cutoff date as completed
     if (matchDate < cutoffDate) {
@@ -557,53 +623,57 @@ export default function MyTeam() {
   const saveTeamForMatchday = async () => {
     try {
       // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
       if (userError) {
-        console.error('User error:', userError);
+        console.error("User error:", userError);
         throw userError;
       }
       if (!user) {
-        throw new Error('No user logged in');
+        throw new Error("No user logged in");
       }
 
       if (!currentMatch) {
-        throw new Error('No match selected');
+        throw new Error("No match selected");
       }
 
       // Check if match has started
       if (hasMatchStarted(currentMatch)) {
-        throw new Error('Cannot modify team after match has started');
+        throw new Error("Cannot modify team after match has started");
       }
 
       // Validate team composition
       const validation = validateTeam(selectedPlayers);
       if (!validation.isValid) {
-        throw new Error(`Team composition invalid:\n${validation.errors.join('\n')}`);
+        throw new Error(`Team composition invalid:\n${validation.errors.join("\n")}`);
       }
-      
+
       // Validate captain and vice-captain
       if (!captainId) {
-        throw new Error('You must select a captain');
+        throw new Error("You must select a captain");
       }
-      
+
       if (!viceCaptainId) {
-        throw new Error('You must select a vice-captain');
+        throw new Error("You must select a vice-captain");
       }
-      
+
       if (captainId === viceCaptainId) {
-        throw new Error('Captain and vice-captain must be different players');
+        throw new Error("Captain and vice-captain must be different players");
       }
 
       // Calculate points for the current match (with captain and vice-captain multipliers)
       const matchPoints = selectedPlayers.reduce((total, player) => {
-        const basePoints = playerPointsByMatch[player.Player]?.matches[currentMatch.id]?.total_points || 0;
-        
+        const basePoints =
+          playerPointsByMatch[player.Player]?.matches[currentMatch.id]?.total_points || 0;
+
         if (player.Player_ID === captainId) {
-          return total + (basePoints * 2);
+          return total + basePoints * 2;
         } else if (player.Player_ID === viceCaptainId) {
-          return total + (basePoints * 1.5);
+          return total + basePoints * 1.5;
         }
-        
+
         return total + basePoints;
       }, 0);
 
@@ -613,7 +683,7 @@ export default function MyTeam() {
           player_name: player.Player,
           player_id: player.Player_ID,
           role: player.Role_Detail,
-          team: player.Team_Name
+          team: player.Team_Name,
         };
         return acc;
       }, {} as Record<string, any>);
@@ -624,26 +694,26 @@ export default function MyTeam() {
         players: playersDict,
         points: matchPoints,
         captain_id: captainId,
-        vice_captain_id: viceCaptainId
+        vice_captain_id: viceCaptainId,
       };
 
       // First, check if a record exists
       const { data: existingTeam, error: checkError } = await supabase
-        .from('matchday_teams')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('match_id', currentMatch.id)
+        .from("matchday_teams")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("match_id", currentMatch.id)
         .single();
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Error checking existing team:', checkError);
+      if (checkError && checkError.code !== "PGRST116") {
+        console.error("Error checking existing team:", checkError);
         throw checkError;
       }
 
       // If team exists, ask for confirmation
       if (existingTeam) {
         const confirmed = window.confirm(
-          'You already have a team saved for this match. Do you want to overwrite it?'
+          "You already have a team saved for this match. Do you want to overwrite it?"
         );
         if (!confirmed) {
           return;
@@ -655,28 +725,24 @@ export default function MyTeam() {
       let result;
       if (existingTeam) {
         result = await supabase
-          .from('matchday_teams')
+          .from("matchday_teams")
           .update(teamData)
-          .eq('user_id', user.id)
-          .eq('match_id', currentMatch.id)
+          .eq("user_id", user.id)
+          .eq("match_id", currentMatch.id)
           .select();
       } else {
-        result = await supabase
-          .from('matchday_teams')
-          .insert(teamData)
-          .select();
+        result = await supabase.from("matchday_teams").insert(teamData).select();
       }
 
       if (result.error) {
-        console.error('Database operation error:', result.error);
+        console.error("Database operation error:", result.error);
         throw result.error;
       }
 
-      alert('Team saved successfully!');
-
+      alert("Team saved successfully!");
     } catch (error: any) {
-      console.error('Full error object:', error);
-      alert(`Failed to save team: ${error?.message || 'Unknown error occurred'}`);
+      console.error("Full error object:", error);
+      alert(`Failed to save team: ${error?.message || "Unknown error occurred"}`);
     } finally {
       setIsSaving(false);
     }
@@ -743,11 +809,13 @@ export default function MyTeam() {
                       onClick={saveTeamForMatchday}
                       disabled={isSaving || hasMatchStarted(currentMatch)}
                       className={`mt-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                        ${hasMatchStarted(currentMatch)
-                          ? 'bg-gray-500 cursor-not-allowed'
-                          : isSaving
-                          ? 'bg-[#22c55e] cursor-wait'
-                          : 'bg-[#4ade80] hover:bg-[#22c55e]'}
+                        ${
+                          hasMatchStarted(currentMatch)
+                            ? "bg-gray-500 cursor-not-allowed"
+                            : isSaving
+                            ? "bg-[#22c55e] cursor-wait"
+                            : "bg-[#4ade80] hover:bg-[#22c55e]"
+                        }
                         text-gray-900`}
                     >
                       {isSaving ? (
@@ -756,11 +824,13 @@ export default function MyTeam() {
                           Saving...
                         </span>
                       ) : hasMatchStarted(currentMatch) ? (
-                        new Date(currentMatch.match_date) < new Date('2025-02-17T00:00:00Z')
-                          ? 'Past Tournament Match'
-                          : 'Match Started'
+                        new Date(currentMatch.match_date) < new Date("2025-02-17T00:00:00Z") ? (
+                          "Past Tournament Match"
+                        ) : (
+                          "Match Started"
+                        )
                       ) : (
-                        'Save Team for this Match'
+                        "Save Team for this Match"
                       )}
                     </button>
                   </>
@@ -829,16 +899,25 @@ export default function MyTeam() {
                   const matchPoints = playerPointsByMatch[player.Player]?.matches[currentMatch.id];
                   const isCaptain = player.Player_ID === captainId;
                   const isViceCaptain = player.Player_ID === viceCaptainId;
-                  const adjustedPoints = matchPoints ? 
-                    (isCaptain ? matchPoints.total_points * 2 : 
-                     isViceCaptain ? matchPoints.total_points * 1.5 : 
-                     matchPoints.total_points) : 0;
-                  const isTopScorer = adjustedPoints === Math.max(...getTeamForMatch(currentMatch.id).map(p => {
-                    const pts = playerPointsByMatch[p.Player]?.matches[currentMatch.id]?.total_points || 0;
-                    if (p.Player_ID === captainId) return pts * 2;
-                    if (p.Player_ID === viceCaptainId) return pts * 1.5;
-                    return pts;
-                  })) && adjustedPoints > 0;
+                  const adjustedPoints = matchPoints
+                    ? isCaptain
+                      ? matchPoints.total_points * 2
+                      : isViceCaptain
+                      ? matchPoints.total_points * 1.5
+                      : matchPoints.total_points
+                    : 0;
+                  const isTopScorer =
+                    adjustedPoints ===
+                      Math.max(
+                        ...getTeamForMatch(currentMatch.id).map((p) => {
+                          const pts =
+                            playerPointsByMatch[p.Player]?.matches[currentMatch.id]?.total_points ||
+                            0;
+                          if (p.Player_ID === captainId) return pts * 2;
+                          if (p.Player_ID === viceCaptainId) return pts * 1.5;
+                          return pts;
+                        })
+                      ) && adjustedPoints > 0;
 
                   return (
                     <div
@@ -855,7 +934,9 @@ export default function MyTeam() {
                           <p className="font-medium text-white flex items-center gap-1">
                             {player.Player}
                             {isCaptain && <span className="text-yellow-400 font-bold">(C)</span>}
-                            {isViceCaptain && <span className="text-yellow-400 font-bold">(VC)</span>}
+                            {isViceCaptain && (
+                              <span className="text-yellow-400 font-bold">(VC)</span>
+                            )}
                           </p>
                           <p className="text-sm text-gray-400">
                             {player.Role_Detail} • {player.Team_Name}
@@ -866,18 +947,22 @@ export default function MyTeam() {
                       <div className="flex items-center gap-3">
                         {!hasMatchStarted(currentMatch) && (
                           <div className="flex gap-1">
-                            <button 
+                            <button
                               onClick={() => handleSetCaptain(player.Player_ID)}
                               className={`px-2 py-1 rounded text-xs ${
-                                isCaptain ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white hover:bg-gray-600'
+                                isCaptain
+                                  ? "bg-yellow-400 text-black"
+                                  : "bg-gray-700 text-white hover:bg-gray-600"
                               }`}
                             >
                               Captain
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleSetViceCaptain(player.Player_ID)}
                               className={`px-2 py-1 rounded text-xs ${
-                                isViceCaptain ? 'bg-yellow-400 text-black' : 'bg-gray-700 text-white hover:bg-gray-600'
+                                isViceCaptain
+                                  ? "bg-yellow-400 text-black"
+                                  : "bg-gray-700 text-white hover:bg-gray-600"
                               }`}
                             >
                               Vice Captain
@@ -891,7 +976,7 @@ export default function MyTeam() {
                               {adjustedPoints.toFixed(1)} pts
                               {(isCaptain || isViceCaptain) && (
                                 <span className="text-xs text-gray-400 ml-1">
-                                  ({matchPoints.total_points}×{isCaptain ? '2' : '1.5'})
+                                  ({matchPoints.total_points}×{isCaptain ? "2" : "1.5"})
                                 </span>
                               )}
                             </p>
@@ -906,7 +991,9 @@ export default function MyTeam() {
                               </span>
                               <span>
                                 Field:{" "}
-                                <span className="text-[#4ade80]">{matchPoints.fielding_points}</span>
+                                <span className="text-[#4ade80]">
+                                  {matchPoints.fielding_points}
+                                </span>
                               </span>
                               <span>
                                 POTM:{" "}
@@ -915,8 +1002,22 @@ export default function MyTeam() {
                             </div>
                           </div>
                         ) : (
-                          <div className="text-gray-400 bg-white/5 px-3 py-1 rounded-lg text-sm">
-                            Did not play
+                          <div className="text-right">
+                            <p className="font-bold text-lg text-white">0 pts</p>
+                            <div className="text-sm text-gray-400 flex gap-3">
+                              <span>
+                                Bat: <span className="text-[#4ade80]">0</span>
+                              </span>
+                              <span>
+                                Bowl: <span className="text-[#4ade80]">0</span>
+                              </span>
+                              <span>
+                                Field: <span className="text-[#4ade80]">0</span>
+                              </span>
+                              <span>
+                                POTM: <span className="text-[#4ade80]">0</span>
+                              </span>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -936,7 +1037,9 @@ export default function MyTeam() {
                   captainId={captainId}
                   viceCaptainId={viceCaptainId}
                   onSetCaptain={hasMatchStarted(currentMatch) ? undefined : handleSetCaptain}
-                  onSetViceCaptain={hasMatchStarted(currentMatch) ? undefined : handleSetViceCaptain}
+                  onSetViceCaptain={
+                    hasMatchStarted(currentMatch) ? undefined : handleSetViceCaptain
+                  }
                 />
               </div>
             )}
