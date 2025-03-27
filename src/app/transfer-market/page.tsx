@@ -183,6 +183,7 @@ export default function TransferMarket() {
   const [error, setError] = useState<string | null>(null);
   const [showNotification, setShowNotification] = useState<boolean>(false);
   const [notificationMessage, setNotificationMessage] = useState<string>("");
+  const [notificationType, setNotificationType] = useState<"success" | "error">("success");
   const [transfersRemaining, setTransfersRemaining] = useState<number | "unlimited">("unlimited");
   const [hasFirstGameStarted, setHasFirstGameStarted] = useState<boolean>(false);
   const [transfersDisabled, setTransfersDisabled] = useState<boolean>(false);
@@ -499,9 +500,27 @@ export default function TransferMarket() {
     return roleMatch && countryMatch && teamMatch && notSelected && nameMatch && priceMatch;
   });
 
+  // Add helper function to show notifications
+  const showPopupNotification = (message: string, type: "success" | "error") => {
+    setNotificationMessage(message);
+    setNotificationType(type);
+    setShowNotification(true);
+
+    // Auto-hide the notification after 5 seconds
+    setTimeout(() => {
+      setShowNotification(false);
+    }, 5000);
+  };
+
+  // Helper function to close the notification
+  const closeNotification = () => {
+    setShowNotification(false);
+  };
+
+  // Update togglePlayerSelection to use notification instead of alert
   const togglePlayerSelection = (player: Player) => {
     if (transfersDisabled) {
-      alert("You have used all available transfers for this season!");
+      showPopupNotification("You have used all available transfers for this season!", "error");
       return;
     }
 
@@ -512,7 +531,7 @@ export default function TransferMarket() {
       } else {
         // Add player
         if (prevSelected.length >= 11) {
-          alert("You can't select more than 11 players!");
+          showPopupNotification("You can't select more than 11 players!", "error");
           return prevSelected;
         }
 
@@ -520,7 +539,7 @@ export default function TransferMarket() {
         const newTotalPrice =
           prevSelected.reduce((sum, p) => sum + (p.Price || 0), 0) + (player.Price || 0);
         if (newTotalPrice > 100) {
-          alert("Team budget cannot exceed 100M!");
+          showPopupNotification("Team budget cannot exceed 100M!", "error");
           return prevSelected;
         }
 
@@ -566,21 +585,22 @@ export default function TransferMarket() {
     return validationErrors;
   };
 
+  // Update confirmTeamSelection to use notification instead of alert
   const confirmTeamSelection = async () => {
     if (!user) {
-      alert("You must be logged in to save your team");
+      showPopupNotification("You must be logged in to save your team", "error");
       router.push("/");
       return;
     }
 
     if (selectedPlayers.length !== 11) {
-      alert("Please select exactly 11 players!");
+      showPopupNotification("Please select exactly 11 players!", "error");
       return;
     }
 
     const validationErrors = validateTeamComposition(selectedPlayers);
     if (validationErrors.length > 0) {
-      alert("Team composition invalid:\n" + validationErrors.join("\n"));
+      showPopupNotification("Team composition invalid:\n" + validationErrors.join("\n"), "error");
       return;
     }
 
@@ -596,6 +616,7 @@ export default function TransferMarket() {
       }
 
       setMyTeam(selectedPlayers);
+      showPopupNotification("Team saved successfully!", "success");
 
       // Navigate to captain selection page with a slight delay to show loading state
       setTimeout(() => {
@@ -603,7 +624,7 @@ export default function TransferMarket() {
       }, 800);
     } catch (error) {
       console.error("Error in team confirmation:", error);
-      alert("Failed to save your team. Please try again.");
+      showPopupNotification("Failed to save your team. Please try again.", "error");
       setIsLoading(false);
     }
   };
@@ -656,6 +677,74 @@ export default function TransferMarket() {
 
   return (
     <div className="h-screen flex flex-col">
+      {/* Notification Popup */}
+      {showNotification && (
+        <div className="fixed top-5 right-5 z-50 max-w-md animate-slideIn">
+          <div
+            className={`rounded-lg shadow-lg p-4 flex items-start space-x-4 ${
+              notificationType === "success"
+                ? "bg-gray-700 border-[#4ade80]/40 text-[#4ade80]"
+                : "bg-red-500 border border-red-500/40 text-white"
+            }`}
+          >
+            <div className="flex-shrink-0">
+              {notificationType === "success" ? (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              ) : (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium whitespace-pre-line">{notificationMessage}</p>
+            </div>
+            <button
+              onClick={closeNotification}
+              className="flex-shrink-0 text-white hover:text-white/80 transition-colors"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add animation styles for the notification popup */}
+      <style jsx global>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slideIn {
+          animation: slideIn 0.3s ease-out forwards;
+        }
+      `}</style>
+
       {/* Matches Ribbon */}
       <div className="w-full bg-gradient-to-r from-green-800 to-green-700 p-2 overflow-hidden relative">
         <div className="relative">
