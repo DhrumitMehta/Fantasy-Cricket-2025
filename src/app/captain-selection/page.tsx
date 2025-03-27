@@ -17,6 +17,26 @@ export default function CaptainSelection() {
   const [viceCaptain, setViceCaptain] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [popupMessage, setPopupMessage] = useState<string>("");
+  const [popupType, setPopupType] = useState<"success" | "error">("success");
+
+  // Add animation styles
+  const animationStyles = `
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    .animate-slideIn {
+      animation: slideIn 0.3s ease-out forwards;
+    }
+  `;
 
   // Helper function to transform player keys
   const transformPlayerKeys = (player: any): Player => {
@@ -145,6 +165,18 @@ export default function CaptainSelection() {
     }
   };
 
+  // Helper function to show notification
+  const showNotification = (message: string, type: "success" | "error") => {
+    setPopupMessage(message);
+    setPopupType(type);
+    setShowPopup(true);
+  };
+
+  // Helper function to close the popup
+  const closePopup = () => {
+    setShowPopup(false);
+  };
+
   const confirmSelection = async () => {
     if (!captain || !viceCaptain) {
       alert("Please select both a Captain and Vice-Captain!");
@@ -162,12 +194,17 @@ export default function CaptainSelection() {
         }
       }
 
-      // Navigate to home page
-      router.push("/");
+      // Show success notification
+      showNotification("Team saved successfully!", "success");
+
+      // Wait for 1 second before redirecting
+      setTimeout(() => {
+        // Navigate to home page
+        router.push("/");
+      }, 1000);
     } catch (error) {
       console.error("Error saving captain selections:", error);
-      alert("Failed to save your selections. Please try again.");
-    } finally {
+      showNotification("Failed to save your selections. Please try again.", "error");
       setIsLoading(false);
     }
   };
@@ -198,6 +235,61 @@ export default function CaptainSelection() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-800 to-green-600 p-6">
+      <style jsx global>
+        {animationStyles}
+      </style>
+
+      {/* Popup notification */}
+      {showPopup && (
+        <div className="fixed top-5 right-5 z-50 max-w-md animate-slideIn">
+          <div
+            className={`rounded-lg shadow-lg p-4 flex items-start space-x-4 ${
+              popupType === "success"
+                ? "bg-gray-700 border border-[#4ade80]/40 text-[#4ade80]"
+                : "bg-gray-700 border border-red-500/40 text-red-400"
+            }`}
+          >
+            <div className="flex-shrink-0">
+              {popupType === "success" ? (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              ) : (
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">{popupMessage}</p>
+            </div>
+            <button
+              onClick={closePopup}
+              className="flex-shrink-0 text-gray-400 hover:text-white transition-colors"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="p-6">
           <h1 className="text-2xl font-bold text-center mb-2">Select Captain & Vice-Captain</h1>
