@@ -183,6 +183,9 @@ export default function TransferMarket() {
   const [error, setError] = useState<string | null>(null);
   const [showNotification, setShowNotification] = useState<boolean>(false);
   const [notificationMessage, setNotificationMessage] = useState<string>("");
+  const [transfersRemaining, setTransfersRemaining] = useState<number | "unlimited">("unlimited");
+  const [hasFirstGameStarted, setHasFirstGameStarted] = useState<boolean>(false);
+  const [transfersDisabled, setTransfersDisabled] = useState<boolean>(false);
 
   // Helper function to transform player keys
   const transformPlayerKeys = (player: any): Player => {
@@ -257,13 +260,33 @@ export default function TransferMarket() {
 
         if (error) throw error;
         setMatches(data || []);
+
+        // Check if first game has started
+        const firstGameStarted = checkFirstGameStarted(data || []);
+        setHasFirstGameStarted(firstGameStarted);
+
+        // If first game has started and transfers are still unlimited, update them
+        if (firstGameStarted && transfersRemaining === "unlimited") {
+          // Fetch current transfers used
+          if (user) {
+            const { data: userData } = await supabase
+              .from("user_teams")
+              .select("transfers_used")
+              .eq("user_id", user.id)
+              .maybeSingle();
+
+            const transfersUsed = userData?.transfers_used || 0;
+            setTransfersRemaining(Math.max(0, 200 - transfersUsed));
+            setTransfersDisabled(transfersUsed >= 200);
+          }
+        }
       } catch (error) {
         console.error("Error fetching matches:", error);
       }
     };
 
     fetchMatches();
-  }, []);
+  }, [user, transfersRemaining]);
 
   // Update the fetchPlayers function in the useEffect
   useEffect(() => {
@@ -333,7 +356,7 @@ export default function TransferMarket() {
       try {
         const { data, error } = await supabase
           .from("user_teams")
-          .select("team_data")
+          .select("team_data, transfers_used")
           .eq("user_id", user.id)
           .maybeSingle();
 
@@ -347,8 +370,17 @@ export default function TransferMarket() {
           const teamData = data.team_data as Player[];
           setMyTeam(teamData);
           setSelectedPlayers(teamData);
+
+          // Set transfers used if available
+          if (data.transfers_used !== null && data.transfers_used !== undefined) {
+            const transfersUsed = data.transfers_used;
+            setTransfersRemaining(
+              hasFirstGameStarted ? Math.max(0, 200 - transfersUsed) : "unlimited"
+            );
+            setTransfersDisabled(hasFirstGameStarted && transfersUsed >= 200);
+          }
         } else {
-          console.log("Team couldnt be found in Supabase.");
+          console.log("Team couldn't be found in Supabase.");
         }
       } catch (error) {
         console.error("Error in fetchUserTeam:", error);
@@ -356,7 +388,7 @@ export default function TransferMarket() {
     };
 
     fetchUserTeam();
-  }, [user]);
+  }, [user, hasFirstGameStarted]);
 
   // Function to save team to Supabase
   const saveTeamToSupabase = async (team: Player[]) => {
@@ -372,11 +404,39 @@ export default function TransferMarket() {
       // Check if the user already has a team
       const { data: existingTeam } = await supabase
         .from("user_teams")
-        .select("id")
+        .select("id, team_data, transfers_used")
         .eq("user_id", user.id)
         .maybeSingle();
 
       let result;
+
+      // Count how many players have changed from previous team
+      const previousTeam = existingTeam?.team_data || [];
+      const previousPlayerIds = previousTeam.map((p: Player) => p.Player_ID);
+      const newPlayerIds = team.map((p) => p.Player_ID);
+
+      // Calculate changes (players removed + players added)
+      const removedPlayers = previousPlayerIds.filter(
+        (id: string) => !newPlayerIds.includes(id)
+      ).length;
+      const addedPlayers = newPlayerIds.filter((id) => !previousPlayerIds.includes(id)).length;
+
+      // Total changes = players added (which equals players removed)
+      const totalChanges = addedPlayers;
+
+      // Current transfers used
+      let updatedTransfersUsed = existingTeam?.transfers_used || 0;
+
+      // Only increment transfers if the first game has started
+      if (hasFirstGameStarted) {
+        updatedTransfersUsed += totalChanges;
+
+        // Check if we've exceeded the transfer limit
+        if (updatedTransfersUsed > 200) {
+          setError("You have exceeded the maximum number of transfers (200)");
+          return false;
+        }
+      }
 
       if (existingTeam) {
         // Update existing team
@@ -385,6 +445,7 @@ export default function TransferMarket() {
           .update({
             team_data: team,
             updated_at: new Date().toISOString(),
+            transfers_used: updatedTransfersUsed,
           })
           .eq("user_id", user.id);
       } else {
@@ -393,12 +454,20 @@ export default function TransferMarket() {
           user_id: user.id,
           team_data: team,
           total_points: 0,
+          transfers_used: 0,
         });
       }
 
       if (result.error) {
         throw result.error;
       }
+
+      // Update the transfers remaining state
+      if (hasFirstGameStarted) {
+        setTransfersRemaining(Math.max(0, 200 - updatedTransfersUsed));
+        setTransfersDisabled(updatedTransfersUsed >= 200);
+      }
+
       return true;
     } catch (error) {
       console.error("Error saving team to Supabase:", error);
@@ -431,6 +500,11 @@ export default function TransferMarket() {
   });
 
   const togglePlayerSelection = (player: Player) => {
+    if (transfersDisabled) {
+      alert("You have used all available transfers for this season!");
+      return;
+    }
+
     setSelectedPlayers((prevSelected) => {
       if (prevSelected.some((p) => p.Player_ID === player.Player_ID)) {
         // Remove player
@@ -564,6 +638,22 @@ export default function TransferMarket() {
     });
   };
 
+  // Add a function to check if the first game has started
+  const checkFirstGameStarted = (matches: Match[]) => {
+    if (matches.length === 0) return false;
+
+    // Sort matches by date
+    const sortedMatches = [...matches].sort(
+      (a, b) => new Date(a.match_date).getTime() - new Date(b.match_date).getTime()
+    );
+
+    // Check if the earliest match date is in the past
+    const firstMatchDate = new Date(sortedMatches[0].match_date);
+    const now = new Date();
+
+    return firstMatchDate < now;
+  };
+
   return (
     <div className="h-screen flex flex-col">
       {/* Matches Ribbon */}
@@ -647,7 +737,7 @@ export default function TransferMarket() {
             </button>
           </div>
 
-          {/* Stats Card - More Compact */}
+          {/* Stats Card - More Compact with Transfers Remaining */}
           <div className="bg-white rounded-lg shadow-sm p-3 mb-4 flex justify-between">
             <div className="flex items-center gap-2">
               <div className="text-xs text-gray-500">Budget Remaining</div>
@@ -659,7 +749,42 @@ export default function TransferMarket() {
               <div className="text-xs text-gray-500">Players Selected</div>
               <div className="text-lg font-bold">{selectedPlayers.length}/11</div>
             </div>
+            <div className="flex items-center gap-2">
+              <div className="text-xs text-gray-500">Transfers Remaining</div>
+              <div
+                className={`text-lg font-bold ${
+                  transfersDisabled
+                    ? "text-red-600"
+                    : transfersRemaining === "unlimited"
+                    ? "text-green-600"
+                    : "text-blue-600"
+                }`}
+              >
+                {transfersRemaining === "unlimited" ? "∞" : transfersRemaining}
+              </div>
+            </div>
           </div>
+
+          {/* Transfer limit warning if disabled */}
+          {transfersDisabled && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-red-700 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              <span>You have used all available transfers for this season!</span>
+            </div>
+          )}
 
           {/* Filters Section */}
           <div className="space-y-4 mb-4">
@@ -951,17 +1076,21 @@ export default function TransferMarket() {
 
               {/* Wicket-keeper - closer to batters */}
               <div className="absolute top-[36%] left-1/2 transform -translate-x-1/2">
-                {selectedPlayers
-                  .filter((p) => p.Player_Role === "WK-Batter")
-                  .slice(0, 1)
-                  .map((player) => (
-                    <div
-                      key={player.Player_ID}
-                      className="transform hover:scale-105 transition-transform"
-                    >
-                      <PlayerCard player={player} onRemove={() => togglePlayerSelection(player)} />
-                    </div>
-                  ))}
+                <div className="flex justify-center gap-2">
+                  {selectedPlayers
+                    .filter((p) => p.Player_Role === "WK-Batter")
+                    .map((player) => (
+                      <div
+                        key={player.Player_ID}
+                        className="transform hover:scale-105 transition-transform"
+                      >
+                        <PlayerCard
+                          player={player}
+                          onRemove={() => togglePlayerSelection(player)}
+                        />
+                      </div>
+                    ))}
+                </div>
               </div>
 
               {/* All-rounders row */}
