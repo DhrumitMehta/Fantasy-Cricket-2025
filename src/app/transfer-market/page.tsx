@@ -348,22 +348,7 @@ export default function TransferMarket() {
           setMyTeam(teamData);
           setSelectedPlayers(teamData);
         } else {
-          // No team found in Supabase, fallback to localStorage for transition
-          const savedTeam = localStorage.getItem("myTeam");
-          if (savedTeam) {
-            try {
-              const parsedTeam = JSON.parse(savedTeam);
-              setMyTeam(parsedTeam);
-              setSelectedPlayers(parsedTeam);
-
-              // Migrate team from localStorage to Supabase
-              if (user) {
-                saveTeamToSupabase(parsedTeam);
-              }
-            } catch (error) {
-              console.error("Error parsing saved team:", error);
-            }
-          }
+          console.log("Team couldnt be found in Supabase.");
         }
       } catch (error) {
         console.error("Error in fetchUserTeam:", error);
@@ -414,10 +399,6 @@ export default function TransferMarket() {
       if (result.error) {
         throw result.error;
       }
-
-      // Also update localStorage for backward compatibility
-      localStorage.setItem("myTeam", JSON.stringify(team));
-
       return true;
     } catch (error) {
       console.error("Error saving team to Supabase:", error);

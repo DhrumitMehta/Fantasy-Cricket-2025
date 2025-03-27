@@ -66,10 +66,10 @@ export default function CaptainSelection() {
       setIsLoading(true);
 
       try {
-        // First try to get team from Supabase
+        // Get team and captain info from Supabase
         const { data, error } = await supabase
           .from("user_teams")
-          .select("team_data")
+          .select("team_data, captain_id, vice_captain_id")
           .eq("user_id", user.id)
           .maybeSingle();
 
@@ -79,7 +79,7 @@ export default function CaptainSelection() {
         }
 
         if (data && data.team_data) {
-          // We found a team in Supabase
+          // Process team data from Supabase
           const processedTeam = data.team_data.map(transformPlayerKeys).filter((player: Player) => {
             if (!player.Player_ID) {
               console.warn("Team player missing ID:", player);
@@ -90,43 +90,12 @@ export default function CaptainSelection() {
 
           setTeam(processedTeam);
 
-          // Check for captain info in Supabase (this would need a separate table or column)
-          // For now, check localStorage as fallback
-          const savedCaptain = localStorage.getItem("teamCaptain");
-          const savedViceCaptain = localStorage.getItem("teamViceCaptain");
-
-          if (savedCaptain) setCaptain(savedCaptain);
-          if (savedViceCaptain) setViceCaptain(savedViceCaptain);
+          // Set captain and vice-captain from Supabase data
+          if (data.captain_id) setCaptain(data.captain_id);
+          if (data.vice_captain_id) setViceCaptain(data.vice_captain_id);
         } else {
-          // Fallback to localStorage if no team in Supabase
-          const savedTeam = localStorage.getItem("myTeam");
-          if (savedTeam) {
-            try {
-              const parsedTeam = JSON.parse(savedTeam)
-                .map(transformPlayerKeys)
-                .filter((player: Player) => {
-                  if (!player.Player_ID) {
-                    console.warn("Saved team player missing ID:", player);
-                    return false;
-                  }
-                  return true;
-                });
-              setTeam(parsedTeam);
-
-              // Check if captain/vice-captain was previously selected
-              const savedCaptain = localStorage.getItem("teamCaptain");
-              const savedViceCaptain = localStorage.getItem("teamViceCaptain");
-
-              if (savedCaptain) setCaptain(savedCaptain);
-              if (savedViceCaptain) setViceCaptain(savedViceCaptain);
-            } catch (error) {
-              console.error("Error parsing saved team:", error);
-              router.push("/transfer-market");
-            }
-          } else {
-            // If no team is found anywhere, redirect to transfer market
-            router.push("/transfer-market");
-          }
+          // No team found in Supabase, redirect to transfer market
+          router.push("/transfer-market");
         }
       } catch (error) {
         console.error("Error loading team:", error);
@@ -159,14 +128,11 @@ export default function CaptainSelection() {
     if (!user || !captain || !viceCaptain) return false;
 
     try {
-      // Save captain info to Supabase (ideally in a separate column or table)
-      // This is a simplified version - you might want a more complex structure
       const { error } = await supabase
         .from("user_teams")
         .update({
           captain_id: captain,
           vice_captain_id: viceCaptain,
-          updated_at: new Date().toISOString(),
         })
         .eq("user_id", user.id);
 
@@ -188,13 +154,12 @@ export default function CaptainSelection() {
     setIsLoading(true);
 
     try {
-      // Save selections to localStorage (for backward compatibility)
-      localStorage.setItem("teamCaptain", captain);
-      localStorage.setItem("teamViceCaptain", viceCaptain);
-
-      // Also save to Supabase if user is logged in
+      // Save to Supabase
       if (user) {
-        await saveCaptainsToSupabase();
+        const success = await saveCaptainsToSupabase();
+        if (!success) {
+          throw new Error("Failed to save your selections");
+        }
       }
 
       // Navigate to home page
