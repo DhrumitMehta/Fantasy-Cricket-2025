@@ -168,7 +168,7 @@ const PitchView = ({
             {adjustedPoints.toFixed(1)} pts
           </p>
         ) : (
-          <p className="text-center text-xs text-gray-500 mt-1">DNP</p>
+          <p className="text-center text-xs text-gray-50 mt-1">DNP</p>
         )}
       </div>
     );
@@ -510,10 +510,9 @@ export default function MyTeam() {
           Price: 0,
         }));
       }
-
-      return [];
     }
 
+    // Always return the selected players if no match-specific team is found
     return selectedPlayers;
   };
 
@@ -1003,8 +1002,22 @@ export default function MyTeam() {
                             </div>
                           </div>
                         ) : (
-                          <div className="text-gray-400 bg-white/5 px-3 py-1 rounded-lg text-sm">
-                            Did not play
+                          <div className="text-right">
+                            <p className="font-bold text-lg text-white">0 pts</p>
+                            <div className="text-sm text-gray-400 flex gap-3">
+                              <span>
+                                Bat: <span className="text-[#4ade80]">0</span>
+                              </span>
+                              <span>
+                                Bowl: <span className="text-[#4ade80]">0</span>
+                              </span>
+                              <span>
+                                Field: <span className="text-[#4ade80]">0</span>
+                              </span>
+                              <span>
+                                POTM: <span className="text-[#4ade80]">0</span>
+                              </span>
+                            </div>
                           </div>
                         )}
                       </div>
