@@ -32,7 +32,15 @@ type MatchdayTeam = {
   id: string;
   user_id: string;
   match_id: string;
-  players: Record<string, Player>;
+  players: Record<
+    string,
+    {
+      player_name: string;
+      player_id: string;
+      role: string;
+      team: string;
+    }
+  >;
   points: number;
   captain_id?: string;
   vice_captain_id?: string;
