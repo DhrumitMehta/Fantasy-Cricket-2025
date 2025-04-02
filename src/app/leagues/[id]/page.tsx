@@ -86,7 +86,10 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
   const fetchLeagueDetails = async () => {
     try {
       // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!user) throw new Error("No user logged in");
 
@@ -106,7 +109,8 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
       // Fetch league members with their profiles and standings in a single query
       const { data: membersDataWithStandings, error: membersStandingsError } = await supabase
         .from("user_leagues")
-        .select(`
+        .select(
+          `
           id,
           user_id,
           league_id,
@@ -121,7 +125,8 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
             total_points,
             matches_played
           )
-        `)
+        `
+        )
         .eq("league_id", leagueId);
 
       if (membersStandingsError) {
@@ -130,7 +135,7 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
       }
 
       // Transform the data
-      const transformedMembers = membersDataWithStandings.map(member => {
+      const transformedMembers = membersDataWithStandings.map((member) => {
         const profileData = Array.isArray(member.profiles) ? member.profiles[0] : member.profiles;
         const standings = member.league_standings?.[0] || { total_points: 0, matches_played: 0 };
 
@@ -142,21 +147,21 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
           joined_at: member.joined_at,
           fantasy_points: standings.total_points,
           matches_played: standings.matches_played,
-          avg_points: standings.matches_played > 0 
+          avg_points:
+            standings.matches_played > 0
               ? Math.round(standings.total_points / standings.matches_played)
               : 0,
           profiles: {
             username: profileData?.username || "Unknown",
             full_name: profileData?.full_name || null,
             country: profileData?.country || null,
-          }
+          },
         };
       });
 
       setMembers(transformedMembers);
-      setIsAdmin(!!transformedMembers.find(m => m.user_id === user.id)?.is_admin);
-      setIsMember(!!transformedMembers.find(m => m.user_id === user.id));
-      
+      setIsAdmin(!!transformedMembers.find((m) => m.user_id === user.id)?.is_admin);
+      setIsMember(!!transformedMembers.find((m) => m.user_id === user.id));
     } catch (err) {
       console.error("Full error object:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -211,13 +216,13 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
 
     try {
       console.log("Starting league leave process...");
-      
+
       // First delete from league_standings
       const { error: standingsError } = await supabase
-        .from('league_standings')
+        .from("league_standings")
         .delete()
-        .eq('user_id', user.id)
-        .eq('league_id', leagueId);
+        .eq("user_id", user.id)
+        .eq("league_id", leagueId);
 
       if (standingsError) {
         console.error("Error deleting league standings:", standingsError);
@@ -226,10 +231,10 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
 
       // Then delete from user_leagues
       const { error: deleteError } = await supabase
-        .from('user_leagues')
+        .from("user_leagues")
         .delete()
-        .eq('user_id', user.id)
-        .eq('league_id', leagueId);
+        .eq("user_id", user.id)
+        .eq("league_id", leagueId);
 
       if (deleteError) {
         console.error("Error deleting from user_leagues:", deleteError);
@@ -238,10 +243,10 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
 
       // Verify the deletion
       const { data: verifyData, error: verifyError } = await supabase
-        .from('user_leagues')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('league_id', leagueId);
+        .from("user_leagues")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("league_id", leagueId);
 
       if (verifyError) {
         console.error("Verification error:", verifyError);
@@ -255,7 +260,6 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
       // If we get here, the deletion was successful
       console.log("Successfully left league");
       router.push("/");
-
     } catch (err) {
       console.error("Full error details:", err);
       const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
@@ -366,21 +370,21 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1c2e] py-12">
+    <div className="min-h-screen bg-[#1a1c2e] py-6 md:py-12">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-white">{league.name}</h1>
-          <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-white">{league.name}</h1>
+          <div className="flex flex-wrap gap-2">
             <Link
               href="/leagues"
-              className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-all"
+              className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition-all"
             >
               Back to Leagues
             </Link>
             {isAdmin && (
               <Link
                 href={`/leagues/${leagueId}/manage`}
-                className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-4 py-2 rounded-lg font-medium transition-all"
+                className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-medium transition-all"
               >
                 Manage League
               </Link>
@@ -394,20 +398,20 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
           </div>
         )}
 
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 mb-8">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-gray-300 mb-4">{league.description}</p>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 md:p-6 border border-white/10 mb-6 md:mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+            <div className="w-full">
+              <p className="text-gray-300 mb-4 text-sm md:text-base">{league.description}</p>
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 md:gap-4 mb-4">
                 <div className="bg-white/5 p-3 rounded-lg">
-                  <p className="text-sm text-gray-400">Members</p>
-                  <p className="text-lg text-white font-medium">
+                  <p className="text-xs md:text-sm text-gray-400">Members</p>
+                  <p className="text-base md:text-lg text-white font-medium">
                     {members.length}/{league.max_members}
                   </p>
                 </div>
                 <div className="bg-white/5 p-3 rounded-lg">
-                  <p className="text-sm text-gray-400">Privacy</p>
-                  <p className="text-lg text-white font-medium">
+                  <p className="text-xs md:text-sm text-gray-400">Privacy</p>
+                  <p className="text-base md:text-lg text-white font-medium">
                     {league.is_private ? "Private" : "Public"}
                   </p>
                 </div>
@@ -416,24 +420,26 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
                 <div className="mt-4">
                   <button
                     onClick={() => setShowJoinCode(!showJoinCode)}
-                    className="bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] px-4 py-2 rounded-lg transition-all font-medium"
+                    className="bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition-all font-medium"
                   >
                     {showJoinCode ? "Hide Join Code" : "Show Join Code"}
                   </button>
                   {showJoinCode && (
                     <div className="mt-2 p-3 bg-white/5 border border-white/10 rounded-lg">
-                      <p className="font-mono text-[#4ade80]">{league.join_code}</p>
+                      <p className="font-mono text-sm text-[#4ade80] break-all">
+                        {league.join_code}
+                      </p>
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            <div>
+            <div className="flex mt-4 md:mt-0">
               {!isMember && (
                 <button
                   onClick={handleJoinLeague}
-                  className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-4 py-2 rounded-lg font-medium transition-all"
+                  className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-medium transition-all"
                 >
                   Join League
                 </button>
@@ -441,7 +447,7 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
               {isMember && !isAdmin && (
                 <button
                   onClick={initiateLeaveLeague}
-                  className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg font-medium transition-all"
+                  className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-medium transition-all"
                 >
                   Leave League
                 </button>
@@ -449,7 +455,7 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
               {isAdmin && (
                 <button
                   onClick={handleDeleteLeague}
-                  className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg font-medium transition-all"
+                  className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-medium transition-all"
                 >
                   Delete League
                 </button>
@@ -460,19 +466,25 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
 
         {isMember && (
           <>
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-white mb-4">Leaderboard</h2>
-              <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 overflow-hidden">
+            <div className="mb-6 md:mb-8">
+              <h2 className="text-lg md:text-xl font-semibold text-white mb-3 md:mb-4">
+                Leaderboard
+              </h2>
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 overflow-x-auto">
                 <table className="min-w-full">
                   <thead className="bg-white/5 border-b border-white/10">
                     <tr>
-                      <th className="py-3 px-4 text-left text-gray-300 font-medium">Rank</th>
-                      <th className="py-3 px-4 text-left text-gray-300 font-medium">User</th>
-                      <th className="py-3 px-4 text-right text-gray-300 font-medium">
-                        Total Points
+                      <th className="py-2 md:py-3 px-2 md:px-4 text-left text-gray-300 text-xs md:text-sm font-medium">
+                        Rank
                       </th>
-                      <th className="py-3 px-4 text-right text-gray-300 font-medium">
-                        Avg Points/Match
+                      <th className="py-2 md:py-3 px-2 md:px-4 text-left text-gray-300 text-xs md:text-sm font-medium">
+                        User
+                      </th>
+                      <th className="py-2 md:py-3 px-2 md:px-4 text-right text-gray-300 text-xs md:text-sm font-medium">
+                        Points
+                      </th>
+                      <th className="py-2 md:py-3 px-2 md:px-4 text-right text-gray-300 text-xs md:text-sm font-medium">
+                        Avg/Match
                       </th>
                     </tr>
                   </thead>
@@ -493,26 +505,32 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
                               member.user_id === user?.id ? "bg-[#4ade80]/5" : ""
                             }`}
                           >
-                            <td className="py-3 px-4 text-left text-white">{index + 1}</td>
-                            <td className="py-3 px-4 text-left text-white">
-                              <div className="flex items-center">
-                                <span>{member.profiles?.username || "User"}</span>
+                            <td className="py-2 md:py-3 px-2 md:px-4 text-left text-white text-xs md:text-sm">
+                              {index + 1}
+                            </td>
+                            <td className="py-2 md:py-3 px-2 md:px-4 text-left text-white text-xs md:text-sm">
+                              <div className="flex items-center flex-wrap gap-1">
+                                <span className="truncate max-w-[100px] sm:max-w-[150px] md:max-w-none">
+                                  {member.profiles?.username || "User"}
+                                </span>
                                 {member.is_admin && (
-                                  <span className="ml-2 px-2 py-1 text-xs bg-[#4ade80]/20 text-[#4ade80] rounded-full">
+                                  <span className="px-1.5 py-0.5 text-xs bg-[#4ade80]/20 text-[#4ade80] rounded-full">
                                     Admin
                                   </span>
                                 )}
                                 {member.user_id === user?.id && (
-                                  <span className="ml-2 px-2 py-1 text-xs bg-white/10 text-white rounded-full">
+                                  <span className="px-1.5 py-0.5 text-xs bg-white/10 text-white rounded-full">
                                     You
                                   </span>
                                 )}
                               </div>
                             </td>
-                            <td className="py-3 px-4 text-right font-semibold text-[#4ade80]">
+                            <td className="py-2 md:py-3 px-2 md:px-4 text-right font-semibold text-[#4ade80] text-xs md:text-sm">
                               {member.fantasy_points || 0}
                             </td>
-                            <td className="py-3 px-4 text-right text-gray-300">{avgPoints}</td>
+                            <td className="py-2 md:py-3 px-2 md:px-4 text-right text-gray-300 text-xs md:text-sm">
+                              {avgPoints}
+                            </td>
                           </tr>
                         );
                       })}
@@ -522,12 +540,12 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold text-white mb-4">My Team</h2>
-              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+              <h2 className="text-lg md:text-xl font-semibold text-white mb-3 md:mb-4">My Team</h2>
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 md:p-6 border border-white/10">
                 {/* Team management section */}
                 <Link
                   href={`/leagues/${leagueId}/team`}
-                  className="bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] px-4 py-2 rounded-lg font-medium transition-all inline-block"
+                  className="bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-medium transition-all inline-block"
                 >
                   Manage My Team
                 </Link>
@@ -538,23 +556,25 @@ export default function LeagueDetails({ params }: { params: { id: string } }) {
       </div>
 
       {showLeaveConfirmation && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1a1c2e] border border-white/10 rounded-2xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-semibold text-white mb-4">Leave League</h3>
-            <p className="text-gray-300 mb-6">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a1c2e] border border-white/10 rounded-2xl p-4 md:p-6 max-w-md w-full">
+            <h3 className="text-lg md:text-xl font-semibold text-white mb-3 md:mb-4">
+              Leave League
+            </h3>
+            <p className="text-gray-300 text-sm md:text-base mb-5 md:mb-6">
               Are you sure you want to leave this league? You will lose your position in the
               leaderboard.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowLeaveConfirmation(false)}
-                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-all"
+                className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-lg transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmLeaveLeague}
-                className="bg-red-500/80 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-medium transition-all"
+                className="bg-red-500/80 hover:bg-red-500 text-white px-3 py-1.5 md:px-4 md:py-2 text-sm md:text-base rounded-lg font-medium transition-all"
               >
                 Leave League
               </button>
