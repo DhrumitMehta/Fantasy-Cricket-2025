@@ -786,6 +786,21 @@ export default function MyTeam() {
               <p className="text-gray-300">Loading team stats...</p>
             </div>
           </div>
+        ) : selectedPlayers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 text-center">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold mb-3 text-white">You haven't built a team yet!</h2>
+              <p className="text-gray-300 mb-6">
+                Visit the transfer market to select your players and create your dream team.
+              </p>
+              <Link
+                href="/transfer-market"
+                className="inline-block px-6 py-3 bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 font-medium rounded-lg transition-colors"
+              >
+                Go to Transfer Market
+              </Link>
+            </div>
+          </div>
         ) : (
           <>
             {/* Match navigation */}
