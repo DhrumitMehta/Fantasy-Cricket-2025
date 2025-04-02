@@ -81,7 +81,7 @@ const PitchView = ({
 }) => {
   if (!players || !currentMatch) {
     return (
-      <div className="relative w-full h-[40rem] bg-gradient-to-b from-green-800/40 to-green-900/40 rounded-xl overflow-hidden flex items-center justify-center">
+      <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[40rem] bg-gradient-to-b from-green-800/40 to-green-900/40 rounded-xl overflow-hidden flex items-center justify-center">
         <div className="text-white text-lg">No player data available</div>
       </div>
     );
@@ -134,13 +134,13 @@ const PitchView = ({
       : 0;
 
     return (
-      <div className="w-28 bg-white/10 backdrop-blur-lg rounded-lg p-2 shadow-lg border border-white/20 hover:border-[#4ade80]/50 hover:scale-105 transition-transform">
-        <p className="text-sm font-semibold text-center truncate text-white">
+      <div className="w-20 sm:w-24 md:w-28 bg-white/10 backdrop-blur-lg rounded-lg p-1.5 sm:p-2 shadow-lg border border-white/20 hover:border-[#4ade80]/50 hover:scale-105 transition-transform">
+        <p className="text-xs sm:text-sm font-semibold text-center truncate text-white">
           {player.Player}
           {isCaptain && <span className="ml-1 text-yellow-400">(C)</span>}
           {isViceCaptain && <span className="ml-1 text-yellow-400">(VC)</span>}
         </p>
-        <p className="text-xs text-gray-400 text-center">{player.Role_Detail}</p>
+        <p className="text-xs text-gray-400 text-center truncate">{player.Role_Detail}</p>
 
         {!disableSelection && (
           <div className="flex justify-center gap-1 mt-1">
@@ -164,7 +164,7 @@ const PitchView = ({
         )}
 
         {matchPoints ? (
-          <p className="text-center font-bold mt-1 text-[#4ade80]">
+          <p className="text-center font-bold mt-1 text-[#4ade80] text-xs sm:text-sm">
             {adjustedPoints.toFixed(1)} pts
           </p>
         ) : (
@@ -178,7 +178,7 @@ const PitchView = ({
   const hasMultipleWicketKeepers = wicketKeepers.length > 1;
 
   return (
-    <div className="relative w-full h-[40rem] bg-gradient-to-b from-green-800/40 to-green-900/40 rounded-xl overflow-hidden">
+    <div className="relative w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[40rem] bg-gradient-to-b from-green-800/40 to-green-900/40 rounded-xl overflow-hidden">
       {/* Pitch markings */}
       <div className="absolute inset-0">
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[85%] h-[90%] rounded-full border-2 border-white/20" />
@@ -189,9 +189,9 @@ const PitchView = ({
       {/* Player Positions */}
       <div className="absolute inset-0">
         {/* Batsmen */}
-        <div className="absolute top-[15%] left-0 w-full flex justify-center gap-12 flex-wrap px-8">
+        <div className="absolute top-[15%] left-0 w-full flex justify-center gap-3 sm:gap-6 md:gap-12 flex-wrap px-4 sm:px-8">
           {(playersByRole.batsman || []).map((player, idx) => (
-            <div key={player.Player_ID} className="mb-4">
+            <div key={player.Player_ID} className="mb-2 sm:mb-4">
               <PlayerCard
                 player={player}
                 isCaptain={player.Player_ID === captainId}
@@ -205,7 +205,7 @@ const PitchView = ({
 
         {/* Wicket-keeper(s) */}
         {hasMultipleWicketKeepers ? (
-          <div className="absolute top-[50%] left-0 w-full flex justify-center gap-32">
+          <div className="absolute top-[50%] left-0 w-full flex justify-center gap-16 sm:gap-24 md:gap-32">
             {wicketKeepers.slice(0, 2).map((player) => (
               <div key={player.Player_ID}>
                 <PlayerCard
@@ -235,7 +235,7 @@ const PitchView = ({
         )}
 
         {/* All-rounders */}
-        <div className="absolute top-[65%] left-0 w-full flex justify-center gap-12 flex-wrap px-8">
+        <div className="absolute top-[65%] left-0 w-full flex justify-center gap-3 sm:gap-6 md:gap-12 flex-wrap px-4 sm:px-8">
           {[
             ...(playersByRole["batting-all-rounder"] || []),
             ...(playersByRole["bowling-all-rounder"] || []),
@@ -253,7 +253,7 @@ const PitchView = ({
         </div>
 
         {/* Bowlers */}
-        <div className="absolute top-[85%] left-0 w-full flex justify-center gap-8 flex-wrap px-8">
+        <div className="absolute top-[85%] left-0 w-full flex justify-center gap-3 sm:gap-5 md:gap-8 flex-wrap px-4 sm:px-8">
           {(playersByRole.bowler || []).map((player) => (
             <div key={player.Player_ID}>
               <PlayerCard
@@ -269,7 +269,7 @@ const PitchView = ({
       </div>
 
       {/* Role distribution overlay */}
-      <div className="absolute top-2 left-2 bg-black/70 text-white p-3 text-xs rounded-lg border border-white/10">
+      <div className="absolute top-2 left-2 bg-black/70 text-white p-2 sm:p-3 text-xs rounded-lg border border-white/10">
         <p className="flex justify-between">
           <span>WK:</span>{" "}
           <span className="text-[#4ade80] font-medium ml-2">{wicketKeepers.length}</span>
@@ -767,9 +767,9 @@ export default function MyTeam() {
 
   return (
     <main className="min-h-screen bg-[#1a1c2e] text-white">
-      <div className="max-w-7xl mx-auto p-6 md:p-8">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8">
         {/* Header with back button */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <Link
             href="/"
             className="inline-flex items-center gap-2 text-[#4ade80] hover:text-[#22c55e] transition-colors"
@@ -786,29 +786,48 @@ export default function MyTeam() {
               <p className="text-gray-300">Loading team stats...</p>
             </div>
           </div>
+        ) : selectedPlayers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 text-center">
+            <div className="mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold mb-3 text-white">
+                You haven't built a team yet!
+              </h2>
+              <p className="text-gray-300 mb-6">
+                Visit the transfer market to select your players and create your dream team.
+              </p>
+              <Link
+                href="/transfer-market"
+                className="inline-block px-6 py-3 bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 font-medium rounded-lg transition-colors"
+              >
+                Go to Transfer Market
+              </Link>
+            </div>
+          </div>
         ) : (
           <>
             {/* Match navigation */}
-            <div className="flex items-center justify-between mb-8 bg-white/5 backdrop-blur-lg rounded-xl p-4 border border-white/10">
+            <div className="flex items-center justify-between mb-6 sm:mb-8 bg-white/5 backdrop-blur-lg rounded-xl p-3 sm:p-4 border border-white/10">
               <button
                 onClick={() => setCurrentMatchIndex((i) => Math.max(0, i - 1))}
                 disabled={currentMatchIndex === 0}
-                className="p-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-transparent transition-all"
+                className="p-1.5 sm:p-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-transparent transition-all"
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
 
               <div className="text-center">
-                <h2 className="text-2xl font-bold mb-1 text-white">
+                <h2 className="text-xl sm:text-2xl font-bold mb-1 text-white">
                   Matchday {currentMatchIndex + 1}
                 </h2>
                 {currentMatch && (
                   <>
-                    <p className="text-[#4ade80]">{currentMatch.teams.join(" vs ")}</p>
+                    <p className="text-sm sm:text-base text-[#4ade80]">
+                      {currentMatch.teams.join(" vs ")}
+                    </p>
                     <button
                       onClick={saveTeamForMatchday}
                       disabled={isSaving || hasMatchStarted(currentMatch)}
-                      className={`mt-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                      className={`mt-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors
                         ${
                           hasMatchStarted(currentMatch)
                             ? "bg-gray-500 cursor-not-allowed"
@@ -820,7 +839,7 @@ export default function MyTeam() {
                     >
                       {isSaving ? (
                         <span className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+                          <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
                           Saving...
                         </span>
                       ) : hasMatchStarted(currentMatch) ? (
@@ -840,41 +859,43 @@ export default function MyTeam() {
               <button
                 onClick={() => setCurrentMatchIndex((i) => Math.min(matches.length - 1, i + 1))}
                 disabled={currentMatchIndex === matches.length - 1}
-                className="p-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-transparent transition-all"
+                className="p-1.5 sm:p-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-transparent transition-all"
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
 
             {/* Stats cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
-              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-5 border border-white/10 hover:border-[#4ade80]/50 transition-all">
-                <p className="text-sm text-[#4ade80] mb-1">Team Points</p>
-                <p className="text-3xl font-bold text-white">{totalPoints}</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-3 sm:p-5 border border-white/10 hover:border-[#4ade80]/50 transition-all">
+                <p className="text-xs sm:text-sm text-[#4ade80] mb-1">Team Points</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{totalPoints}</p>
               </div>
 
-              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-5 border border-white/10 hover:border-[#4ade80]/50 transition-all">
-                <p className="text-sm text-[#4ade80] mb-1">Average Player</p>
-                <p className="text-3xl font-bold text-white">{averagePoints}</p>
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-3 sm:p-5 border border-white/10 hover:border-[#4ade80]/50 transition-all">
+                <p className="text-xs sm:text-sm text-[#4ade80] mb-1">Average Player</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{averagePoints}</p>
               </div>
 
-              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-5 border border-white/10 hover:border-[#4ade80]/50 transition-all">
-                <p className="text-sm text-[#4ade80] mb-1">Highest Player</p>
-                <p className="text-3xl font-bold text-white">{highestPoints}</p>
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-3 sm:p-5 border border-white/10 hover:border-[#4ade80]/50 transition-all">
+                <p className="text-xs sm:text-sm text-[#4ade80] mb-1">Highest Player</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{highestPoints}</p>
               </div>
 
-              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-5 border border-white/10 hover:border-[#4ade80]/50 transition-all">
-                <p className="text-sm text-[#4ade80] mb-1">Total Players</p>
-                <p className="text-3xl font-bold text-white">{selectedPlayers.length}</p>
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-3 sm:p-5 border border-white/10 hover:border-[#4ade80]/50 transition-all">
+                <p className="text-xs sm:text-sm text-[#4ade80] mb-1">Total Players</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">
+                  {selectedPlayers.length}
+                </p>
               </div>
             </div>
 
             {/* View mode toggle */}
-            <div className="mb-6 flex justify-center">
+            <div className="mb-5 sm:mb-6 flex justify-center">
               <div className="bg-[#2a2c3e] rounded-full p-1 flex items-center">
                 <button
                   onClick={() => setViewMode("pitch")}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all ${
                     viewMode === "pitch" ? "bg-[#4ade80] text-gray-900" : "text-white"
                   }`}
                 >
@@ -882,11 +903,11 @@ export default function MyTeam() {
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 ${
                     viewMode === "list" ? "bg-[#4ade80] text-gray-900" : "text-white"
                   }`}
                 >
-                  <Layout className="w-4 h-4" />
+                  <Layout className="w-3 h-3 sm:w-4 sm:h-4" />
                   List View
                 </button>
               </div>
@@ -894,7 +915,7 @@ export default function MyTeam() {
 
             {/* List view */}
             {viewMode === "list" && currentMatch && (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {getTeamForMatch(currentMatch.id).map((player) => {
                   const matchPoints = playerPointsByMatch[player.Player]?.matches[currentMatch.id];
                   const isCaptain = player.Player_ID === captainId;
@@ -922,31 +943,31 @@ export default function MyTeam() {
                   return (
                     <div
                       key={player.Player_ID}
-                      className={`flex items-center justify-between p-5 rounded-xl backdrop-blur-lg transition-all ${
+                      className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-5 rounded-xl backdrop-blur-lg transition-all ${
                         isTopScorer
                           ? "bg-[#4ade80]/10 border border-[#4ade80]/30"
                           : "bg-white/5 border border-white/10 hover:border-white/20"
                       }`}
                     >
-                      <div className="flex items-center space-x-4">
-                        {isTopScorer && <Trophy className="w-5 h-5 text-[#4ade80]" />}
+                      <div className="flex items-center space-x-3 mb-3 sm:mb-0">
+                        {isTopScorer && <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-[#4ade80]" />}
                         <div>
-                          <p className="font-medium text-white flex items-center gap-1">
+                          <p className="font-medium text-white flex items-center gap-1 text-sm sm:text-base">
                             {player.Player}
                             {isCaptain && <span className="text-yellow-400 font-bold">(C)</span>}
                             {isViceCaptain && (
                               <span className="text-yellow-400 font-bold">(VC)</span>
                             )}
                           </p>
-                          <p className="text-sm text-gray-400">
+                          <p className="text-xs sm:text-sm text-gray-400">
                             {player.Role_Detail} • {player.Team_Name}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
                         {!hasMatchStarted(currentMatch) && (
-                          <div className="flex gap-1">
+                          <div className="flex gap-1 sm:gap-2 mb-2 sm:mb-0">
                             <button
                               onClick={() => handleSetCaptain(player.Player_ID)}
                               className={`px-2 py-1 rounded text-xs ${
@@ -972,7 +993,7 @@ export default function MyTeam() {
 
                         {matchPoints ? (
                           <div className="text-right">
-                            <p className="font-bold text-lg text-white">
+                            <p className="font-bold text-base sm:text-lg text-white">
                               {adjustedPoints.toFixed(1)} pts
                               {(isCaptain || isViceCaptain) && (
                                 <span className="text-xs text-gray-400 ml-1">
@@ -980,7 +1001,7 @@ export default function MyTeam() {
                                 </span>
                               )}
                             </p>
-                            <div className="text-sm text-gray-400 flex gap-3">
+                            <div className="text-xs sm:text-sm text-gray-400 flex flex-wrap gap-2 sm:gap-3">
                               <span>
                                 Bat:{" "}
                                 <span className="text-[#4ade80]">{matchPoints.batting_points}</span>
@@ -1003,8 +1024,8 @@ export default function MyTeam() {
                           </div>
                         ) : (
                           <div className="text-right">
-                            <p className="font-bold text-lg text-white">0 pts</p>
-                            <div className="text-sm text-gray-400 flex gap-3">
+                            <p className="font-bold text-base sm:text-lg text-white">0 pts</p>
+                            <div className="text-xs sm:text-sm text-gray-400 flex flex-wrap gap-2 sm:gap-3">
                               <span>
                                 Bat: <span className="text-[#4ade80]">0</span>
                               </span>
@@ -1029,7 +1050,7 @@ export default function MyTeam() {
 
             {/* Pitch view */}
             {viewMode === "pitch" && currentMatch && (
-              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 border border-white/10">
+              <div className="bg-white/5 backdrop-blur-lg rounded-xl p-3 sm:p-4 border border-white/10">
                 <PitchView
                   players={getTeamForMatch(currentMatch.id)}
                   currentMatch={currentMatch}

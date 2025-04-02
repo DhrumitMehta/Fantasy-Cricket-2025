@@ -275,14 +275,14 @@ export default function Leagues() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1a1c2e] py-12">
+    <div className="min-h-screen bg-[#1a1c2e] py-8 md:py-12">
       <style jsx global>
         {animationStyles}
       </style>
 
       {/* Popup notification */}
       {showPopup && (
-        <div className="fixed top-5 right-5 z-50 max-w-md animate-slideIn">
+        <div className="fixed top-5 right-5 z-50 max-w-md w-[90%] sm:w-auto animate-slideIn">
           <div
             className={`rounded-lg shadow-lg p-4 flex items-start space-x-4 ${
               popupType === "success"
@@ -292,7 +292,12 @@ export default function Leagues() {
           >
             <div className="flex-shrink-0">
               {popupType === "success" ? (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg
+                  className="h-5 w-5 sm:h-6 sm:w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -301,7 +306,12 @@ export default function Leagues() {
                   />
                 </svg>
               ) : (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg
+                  className="h-5 w-5 sm:h-6 sm:w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -318,7 +328,12 @@ export default function Leagues() {
               onClick={closePopup}
               className="flex-shrink-0 text-gray-400 hover:text-white transition-colors"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="h-4 w-4 sm:h-5 sm:w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -331,12 +346,12 @@ export default function Leagues() {
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center space-x-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4 sm:gap-0">
+          <div className="flex items-center space-x-4 w-full sm:w-auto">
             <Link
               href="/"
-              className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-all flex items-center"
+              className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all flex items-center"
             >
               <svg
                 className="w-4 h-4 mr-2"
@@ -354,18 +369,18 @@ export default function Leagues() {
               </svg>
               Home
             </Link>
-            <h1 className="text-3xl font-bold text-white">Your Leagues</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Your Leagues</h1>
           </div>
-          <div className="space-x-4">
+          <div className="flex w-full sm:w-auto space-x-3 sm:space-x-4">
             <Link
               href="/leagues/join"
-              className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-all"
+              className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all flex-1 sm:flex-initial text-center text-sm sm:text-base"
             >
               Join League
             </Link>
             <Link
               href="/leagues/create"
-              className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-4 py-2 rounded-lg font-medium transition-all"
+              className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium transition-all flex-1 sm:flex-initial text-center text-sm sm:text-base"
             >
               Create League
             </Link>
@@ -386,12 +401,16 @@ export default function Leagues() {
         ) : (
           <>
             {/* My Leagues Section */}
-            <div className="mb-12">
-              <h2 className="text-xl font-semibold text-white mb-4">My Leagues</h2>
+            <div className="mb-8 sm:mb-12">
+              <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">
+                My Leagues
+              </h2>
               {myLeagues.length === 0 ? (
-                <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 text-center">
-                  <p className="text-gray-400">You haven't joined any leagues yet.</p>
-                  <div className="mt-4">
+                <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-5 sm:p-8 border border-white/10 text-center">
+                  <p className="text-gray-400 text-sm sm:text-base">
+                    You haven't joined any leagues yet.
+                  </p>
+                  <div className="mt-4 text-sm sm:text-base">
                     <Link
                       href="/leagues/create"
                       className="text-[#4ade80] hover:text-[#22c55e] font-medium"
@@ -408,40 +427,42 @@ export default function Leagues() {
                   </div>
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {myLeagues.map((league) => (
                     <div
                       key={league.id}
-                      className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-[#4ade80]/50 transition-all group"
+                      className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/10 hover:border-[#4ade80]/50 transition-all group"
                     >
-                      <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-lg font-semibold text-white">{league.name}</h3>
+                      <div className="flex justify-between items-start mb-3 sm:mb-4">
+                        <h3 className="text-base sm:text-lg font-semibold text-white">
+                          {league.name}
+                        </h3>
                         {league.is_admin && (
                           <span className="bg-[#4ade80]/20 text-[#4ade80] text-xs px-2 py-1 rounded-full">
                             Admin
                           </span>
                         )}
                       </div>
-                      <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                      <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">
                         {league.description || "No description provided."}
                       </p>
-                      <div className="flex justify-between items-center text-sm text-gray-400 mb-6">
+                      <div className="flex justify-between items-center text-xs sm:text-sm text-gray-400 mb-4 sm:mb-6">
                         <div>
                           {league.member_count} / {league.max_members} members
                         </div>
                         <div>{league.is_private ? "Private" : "Public"}</div>
                       </div>
-                      <div className="flex flex-col space-y-3">
+                      <div className="flex flex-col space-y-2 sm:space-y-3">
                         <Link
                           href={`/leagues/${league.id}`}
-                          className="bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] text-center py-2 rounded-lg font-medium transition-all w-full"
+                          className="bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] text-center py-2 rounded-lg font-medium transition-all w-full text-sm sm:text-base"
                         >
                           View League
                         </Link>
                         {league.is_private && league.is_admin && (
                           <button
                             onClick={() => copyLeagueCode(league.join_code)}
-                            className="bg-white/5 hover:bg-white/10 text-white text-center py-2 rounded-lg transition-all w-full"
+                            className="bg-white/5 hover:bg-white/10 text-white text-center py-2 rounded-lg transition-all w-full text-sm sm:text-base"
                           >
                             Copy Join Code
                           </button>
@@ -456,29 +477,29 @@ export default function Leagues() {
             {/* Public Leagues Section */}
             {publicLeagues.length > 0 && (
               <div>
-                <h2 className="text-xl font-semibold text-white mb-4">Public Leagues</h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">
+                  Public Leagues
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {publicLeagues.map((league) => (
                     <div
                       key={league.id}
-                      className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-[#4ade80]/50 transition-all group"
+                      className="bg-white/5 backdrop-blur-lg rounded-2xl p-4 sm:p-6 border border-white/10 hover:border-[#4ade80]/50 transition-all group"
                     >
-                      <h3 className="text-lg font-semibold text-white mb-2">{league.name}</h3>
-                      <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                      <h3 className="text-base sm:text-lg font-semibold text-white mb-2">
+                        {league.name}
+                      </h3>
+                      <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">
                         {league.description || "No description provided."}
                       </p>
-                      <div className="flex justify-between items-center text-sm text-gray-400 mb-6">
+                      <div className="flex justify-between items-center text-xs sm:text-sm text-gray-400 mb-4 sm:mb-6">
                         <div>
                           {league.member_count} / {league.max_members} members
                         </div>
                       </div>
                       <button
-                        onClick={() => {
-                          // Implement join public league functionality
-                          // This would be similar to join by code but without requiring the code
-                          joinPublicLeague(league.id);
-                        }}
-                        className="bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] text-center py-2 rounded-lg font-medium transition-all w-full"
+                        onClick={() => joinPublicLeague(league.id)}
+                        className="bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] text-center py-2 rounded-lg font-medium transition-all w-full text-sm sm:text-base"
                       >
                         Join League
                       </button>
