@@ -21,6 +21,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Check for authenticated user on load
   useEffect(() => {
@@ -132,33 +133,37 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#1a1c2e]">
       {/* Hero Section with Cricket Stadium Background */}
-      <div className={`relative ${!user ? "min-h-[600px]" : "min-h-[300px]"} overflow-hidden`}>
+      <div
+        className={`relative ${
+          !user ? "min-h-[600px] sm:min-h-[650px]" : "min-h-[300px]"
+        } overflow-hidden`}
+      >
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a1c2e]/90 to-[#1a1c2e] z-10" />
 
         {/* Content */}
-        <div className="relative z-20 max-w-7xl mx-auto px-4 py-12">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             {/* Left Side - Welcome Content */}
-            <div className="text-white space-y-6">
-              <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+            <div className="text-white space-y-4 sm:space-y-6">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight">
                 Your Ultimate <span className="text-[#4ade80]">Cricket Fantasy</span> Experience
               </h1>
-              <p className="text-gray-300 text-lg">
+              <p className="text-gray-300 text-base sm:text-lg">
                 Build your dream team, compete in leagues, and experience the thrill of fantasy
                 cricket like never before.
               </p>
               {!user && (
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-3 sm:gap-4">
                   <Link
                     href="/register"
-                    className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105"
+                    className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-5 sm:px-8 py-2.5 sm:py-3 rounded-lg font-semibold transition-all transform hover:scale-105"
                   >
                     Get Started
                   </Link>
                   <a
                     href="#features"
-                    className="border border-[#4ade80] text-[#4ade80] px-8 py-3 rounded-lg font-semibold hover:bg-[#4ade80]/10 transition-all"
+                    className="border border-[#4ade80] text-[#4ade80] px-5 sm:px-8 py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-[#4ade80]/10 transition-all"
                   >
                     Learn More
                   </a>
@@ -168,16 +173,18 @@ export default function Home() {
 
             {/* Right Side - Auth Form */}
             {!user ? (
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
-                <h2 className="text-2xl font-bold text-white mb-6">Welcome Back</h2>
-                <div className="space-y-4">
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 border border-white/10 w-full max-w-md mx-auto md:mx-0">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
+                  Welcome Back
+                </h2>
+                <div className="space-y-3 sm:space-y-4">
                   <div>
                     <input
                       type="email"
                       placeholder="Email address"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-[#4ade80] focus:border-transparent transition-all"
+                      className="w-full px-4 py-2.5 sm:py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-[#4ade80] focus:border-transparent transition-all"
                     />
                   </div>
                   <div>
@@ -186,7 +193,7 @@ export default function Home() {
                       placeholder="Password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-[#4ade80] focus:border-transparent transition-all"
+                      className="w-full px-4 py-2.5 sm:py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:ring-2 focus:ring-[#4ade80] focus:border-transparent transition-all"
                     />
                   </div>
                   <div className="flex justify-between items-center text-sm">
@@ -197,12 +204,12 @@ export default function Home() {
                   <button
                     onClick={handleSignIn}
                     disabled={loading}
-                    className="w-full bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 font-medium py-3 rounded-lg transition-all transform hover:scale-105 disabled:opacity-50"
+                    className="w-full bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 font-medium py-2.5 sm:py-3 rounded-lg transition-all transform hover:scale-105 disabled:opacity-50"
                   >
                     {loading ? "Signing In..." : "Sign In"}
                   </button>
 
-                  <div className="relative my-6">
+                  <div className="relative my-5 sm:my-6">
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-white/10"></div>
                     </div>
@@ -213,7 +220,7 @@ export default function Home() {
 
                   <button
                     onClick={() => handleSocialSignIn("google")}
-                    className="w-full flex items-center justify-center px-4 py-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all text-white"
+                    className="w-full flex items-center justify-center px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all text-white"
                   >
                     <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                       <path
@@ -248,16 +255,18 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 border border-white/10 w-full max-w-lg mx-auto md:mx-0">
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-white mb-4">Welcome, {user.email}</h2>
-                  <div className="grid grid-cols-2 gap-4">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-4">
+                    Welcome, {user.email}
+                  </h2>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <Link
                       href="/my-team"
-                      className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-6 py-3 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+                      className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-3 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center justify-center gap-2"
                     >
                       <svg
-                        className="w-5 h-5"
+                        className="w-4 h-4 sm:w-5 sm:h-5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -269,14 +278,14 @@ export default function Home() {
                           d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         />
                       </svg>
-                      My Team
+                      <span className="text-sm sm:text-base">My Team</span>
                     </Link>
                     <Link
                       href="/leaderboard"
-                      className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-6 py-3 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+                      className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-3 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center justify-center gap-2"
                     >
                       <svg
-                        className="w-5 h-5"
+                        className="w-4 h-4 sm:w-5 sm:h-5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -288,14 +297,14 @@ export default function Home() {
                           d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
                         />
                       </svg>
-                      Leaderboard
+                      <span className="text-sm sm:text-base">Leaderboard</span>
                     </Link>
                     <Link
                       href="/leagues"
-                      className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-6 py-3 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+                      className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-3 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center justify-center gap-2"
                     >
                       <svg
-                        className="w-5 h-5"
+                        className="w-4 h-4 sm:w-5 sm:h-5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -307,14 +316,14 @@ export default function Home() {
                           d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                         />
                       </svg>
-                      Leagues
+                      <span className="text-sm sm:text-base">Leagues</span>
                     </Link>
                     <Link
                       href="/transfer-market"
-                      className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-6 py-3 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+                      className="bg-[#4ade80] hover:bg-[#22c55e] text-gray-900 px-3 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center justify-center gap-2"
                     >
                       <svg
-                        className="w-5 h-5"
+                        className="w-4 h-4 sm:w-5 sm:h-5"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -326,12 +335,12 @@ export default function Home() {
                           d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      Transfer Market
+                      <span className="text-sm sm:text-base">Transfer Market</span>
                     </Link>
                   </div>
                   <button
                     onClick={handleSignOut}
-                    className="mt-6 bg-white/5 hover:bg-white/10 text-white px-6 py-2 rounded-lg font-medium transition-all w-full"
+                    className="mt-4 sm:mt-6 bg-white/5 hover:bg-white/10 text-white px-6 py-2 rounded-lg font-medium transition-all w-full"
                   >
                     Sign Out
                   </button>
@@ -343,10 +352,13 @@ export default function Home() {
       </div>
 
       {/* Features Section */}
-      <div id="features" className="max-w-7xl mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-3 gap-8">
+      <div id="features" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+        <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-8 sm:mb-10">
+          Key Features
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Pick Your Squad */}
-          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 hover:border-[#4ade80]/50 transition-all group">
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 sm:p-8 border border-white/10 hover:border-[#4ade80]/50 transition-all group">
             <div className="w-12 h-12 bg-[#4ade80]/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-[#4ade80]/20 transition-all">
               <svg
                 className="w-6 h-6 text-[#4ade80]"
@@ -362,8 +374,10 @@ export default function Home() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-white mb-4">Pick Your Squad</h3>
-            <p className="text-gray-400 mb-6">
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">
+              Pick Your Squad
+            </h3>
+            <p className="text-gray-400 mb-5 sm:mb-6">
               Build your dream team with a budget of ₹100 Cr. Choose from the world's best
               cricketers.
             </p>
@@ -373,8 +387,10 @@ export default function Home() {
                   key={index}
                   className="bg-[#4ade80]/10 text-[#4ade80] p-2 rounded-lg text-center"
                 >
-                  <div className="font-medium">{player?.Player?.split(" ")[0] || "Player"}</div>
-                  <div className="text-sm opacity-75">
+                  <div className="font-medium text-xs sm:text-sm truncate">
+                    {player?.Player?.split(" ")[0] || "Player"}
+                  </div>
+                  <div className="text-xs opacity-75 truncate">
                     {player?.Team_Name || player?.Country || "Team"}
                   </div>
                 </div>
@@ -383,7 +399,7 @@ export default function Home() {
           </div>
 
           {/* Leagues & Cups */}
-          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 hover:border-[#4ade80]/50 transition-all group">
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 sm:p-8 border border-white/10 hover:border-[#4ade80]/50 transition-all group">
             <div className="w-12 h-12 bg-[#4ade80]/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-[#4ade80]/20 transition-all">
               <svg
                 className="w-6 h-6 text-[#4ade80]"
@@ -399,21 +415,23 @@ export default function Home() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-white mb-4">Leagues & Cups</h3>
-            <div className="space-y-4">
-              <div className="p-4 bg-[#4ade80]/10 rounded-lg">
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">Leagues & Cups</h3>
+            <div className="space-y-3 sm:space-y-4">
+              <div className="p-3 sm:p-4 bg-[#4ade80]/10 rounded-lg">
                 <div className="font-medium text-[#4ade80]">Global Rankings</div>
-                <div className="text-sm text-gray-400">Compete with players worldwide</div>
+                <div className="text-xs sm:text-sm text-gray-400">
+                  Compete with players worldwide
+                </div>
               </div>
-              <div className="p-4 bg-[#4ade80]/10 rounded-lg">
+              <div className="p-3 sm:p-4 bg-[#4ade80]/10 rounded-lg">
                 <div className="font-medium text-[#4ade80]">Private Leagues</div>
-                <div className="text-sm text-gray-400">Challenge your friends</div>
+                <div className="text-xs sm:text-sm text-gray-400">Challenge your friends</div>
               </div>
             </div>
           </div>
 
           {/* Create League */}
-          <div className="bg-gradient-to-br from-[#4ade80]/20 to-[#4ade80]/10 backdrop-blur-lg rounded-2xl p-8 border border-[#4ade80]/20 hover:border-[#4ade80]/50 transition-all group">
+          <div className="bg-gradient-to-br from-[#4ade80]/20 to-[#4ade80]/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 border border-[#4ade80]/20 hover:border-[#4ade80]/50 transition-all group sm:col-span-2 lg:col-span-1">
             <div className="w-12 h-12 bg-[#4ade80]/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-[#4ade80]/20 transition-all">
               <svg
                 className="w-6 h-6 text-[#4ade80]"
@@ -429,17 +447,26 @@ export default function Home() {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-white mb-4">Create Your League</h3>
-            <p className="text-gray-400 mb-6">
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">
+              Create Your League
+            </h3>
+            <p className="text-gray-400 mb-5 sm:mb-6">
               Start your own league and invite friends, family, or colleagues to join. Compete for
               glory and bragging rights!
             </p>
-            <button className="w-full bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] font-medium py-3 rounded-lg transition-all">
+            <button className="w-full bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] font-medium py-2.5 sm:py-3 rounded-lg transition-all">
               Create League
             </button>
           </div>
         </div>
       </div>
+
+      {/* Display error if any */}
+      {error && (
+        <div className="fixed bottom-4 right-4 bg-red-500/90 text-white px-4 py-3 rounded-lg shadow-lg max-w-xs sm:max-w-sm">
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
     </div>
   );
 }

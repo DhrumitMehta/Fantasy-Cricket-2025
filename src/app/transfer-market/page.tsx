@@ -33,19 +33,25 @@ const MatchCard = ({ match }: { match: Match }) => {
   const team2 = match.teams[1] || "";
 
   return (
-    <div className="min-w-[250px] bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20 hover:border-white/40 transition-colors">
-      <div className="text-sm font-medium text-white/90">{formatDate(match.match_date)}</div>
-      <div className="flex justify-between items-center mt-2">
-        <div className="flex-1 text-[8px] font-semibold text-white text-center line-clamp-2 min-h-[20px]">
+    <div className="min-w-[200px] sm:min-w-[250px] bg-white/10 backdrop-blur-sm rounded-lg p-2 sm:p-3 border border-white/20 hover:border-white/40 transition-colors">
+      <div className="text-xs sm:text-sm font-medium text-white/90">
+        {formatDate(match.match_date)}
+      </div>
+      <div className="flex justify-between items-center mt-1 sm:mt-2">
+        <div className="flex-1 text-[7px] sm:text-[8px] font-semibold text-white text-center line-clamp-2 min-h-[20px]">
           {team1}
         </div>
-        <div className="text-xs px-2 py-0.5 rounded bg-white/20 mx-1">VS</div>
-        <div className="flex-1 text-[8px] font-semibold text-white text-center line-clamp-2 min-h-[20px]">
+        <div className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded bg-white/20 mx-1">
+          VS
+        </div>
+        <div className="flex-1 text-[7px] sm:text-[8px] font-semibold text-white text-center line-clamp-2 min-h-[20px]">
           {team2}
         </div>
       </div>
-      <div className="text-[10px] text-white/50 mt-1 text-center truncate">{match.venue}</div>
-      <div className="text-[11px] text-white/90 mt-2 text-center font-medium bg-black/30 rounded-full py-1">
+      <div className="text-[8px] sm:text-[10px] text-white/50 mt-1 text-center truncate">
+        {match.venue}
+      </div>
+      <div className="text-[9px] sm:text-[11px] text-white/90 mt-1 sm:mt-2 text-center font-medium bg-black/30 rounded-full py-0.5 sm:py-1">
         {match.result}
       </div>
     </div>
@@ -61,20 +67,22 @@ interface PlayerModalProps {
 // PlayerCard component
 const PlayerCard = ({ player, onRemove }: { player: Player; onRemove: () => void }) => {
   return (
-    <div className="w-24 bg-white/10 backdrop-blur-sm rounded-lg p-2 border border-white/20 hover:border-white/40 transition-colors group">
+    <div className="w-20 sm:w-24 md:w-28 bg-white/10 backdrop-blur-sm rounded-lg p-1.5 sm:p-2 border border-white/20 hover:border-white/40 transition-colors group">
       <div className="text-center">
-        <p className="text-xs font-semibold text-white truncate">
+        <p className="text-[10px] sm:text-xs md:text-sm font-semibold text-white truncate">
           {player.Player}
           {player.Country !== "India" && <span className="ml-1">✈️</span>}
         </p>
-        <p className="text-[10px] text-white/70 mt-0.5">{player.Role_Detail}</p>
-        <p className="text-[10px] font-medium bg-white/20 rounded-full px-1.5 py-0.5 mt-1">
+        <p className="text-[8px] sm:text-[10px] md:text-xs text-white/70 mt-0.5 truncate">
+          {player.Role_Detail}
+        </p>
+        <p className="text-[8px] sm:text-[10px] md:text-xs font-medium bg-white/20 rounded-full px-1 sm:px-1.5 py-0.5 mt-1">
           {player.Price?.toFixed(1)}M
         </p>
       </div>
       <button
         onClick={onRemove}
-        className="w-full mt-1 py-0.5 px-1.5 rounded-md bg-red-500/20 hover:bg-red-500/40 text-white text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+        className="w-full mt-1 py-0.5 px-1 sm:px-1.5 rounded-md bg-red-500/20 hover:bg-red-500/40 text-white text-[8px] sm:text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
       >
         Remove
       </button>
@@ -102,15 +110,15 @@ const PlayerModal = ({ player, onClose }: PlayerModalProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-start mb-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white p-4 sm:p-6 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-start mb-3 sm:mb-4">
           <div>
-            <h2 className="text-xl font-bold">
+            <h2 className="text-lg sm:text-xl font-bold">
               {player.Player}
               {player.Country !== "India" && <span className="ml-2">✈️</span>}
             </h2>
-            <span className="text-sm bg-green-100 px-2 py-1 rounded mt-1 inline-block">
+            <span className="text-xs sm:text-sm bg-green-100 px-2 py-1 rounded mt-1 inline-block">
               {player.Price?.toFixed(1)}M
             </span>
           </div>
@@ -119,8 +127,8 @@ const PlayerModal = ({ player, onClose }: PlayerModalProps) => {
           </button>
         </div>
 
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-2 sm:space-y-3">
+          <div className="grid grid-cols-2 gap-1 sm:gap-2 text-xs sm:text-sm">
             <span className="font-semibold">Role:</span>
             <span>{player.Player_Role}</span>
 
@@ -676,12 +684,12 @@ export default function TransferMarket() {
   };
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Notification Popup */}
       {showNotification && (
-        <div className="fixed top-5 right-5 z-50 max-w-md animate-slideIn">
+        <div className="fixed top-5 right-5 z-50 max-w-xs sm:max-w-md animate-slideIn">
           <div
-            className={`rounded-lg shadow-lg p-4 flex items-start space-x-4 ${
+            className={`rounded-lg shadow-lg p-3 sm:p-4 flex items-start space-x-3 sm:space-x-4 ${
               notificationType === "success"
                 ? "bg-gray-700 border-[#4ade80]/40 text-[#4ade80]"
                 : "bg-red-500 border border-red-500/40 text-white"
@@ -689,7 +697,12 @@ export default function TransferMarket() {
           >
             <div className="flex-shrink-0">
               {notificationType === "success" ? (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg
+                  className="h-5 w-5 sm:h-6 sm:w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -698,7 +711,12 @@ export default function TransferMarket() {
                   />
                 </svg>
               ) : (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg
+                  className="h-5 w-5 sm:h-6 sm:w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -709,13 +727,20 @@ export default function TransferMarket() {
               )}
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium whitespace-pre-line">{notificationMessage}</p>
+              <p className="text-xs sm:text-sm font-medium whitespace-pre-line">
+                {notificationMessage}
+              </p>
             </div>
             <button
               onClick={closeNotification}
               className="flex-shrink-0 text-white hover:text-white/80 transition-colors"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="h-4 w-4 sm:h-5 sm:w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -756,12 +781,12 @@ export default function TransferMarket() {
                 container.scrollLeft -= 300;
               }
             }}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-r-lg p-2 z-10"
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-r-lg p-1.5 sm:p-2 z-10"
             aria-label="Scroll left"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
+              className="h-4 w-4 sm:h-5 sm:w-5"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -776,7 +801,7 @@ export default function TransferMarket() {
           {/* Matches container */}
           <div
             id="matches-container"
-            className="flex gap-3 overflow-x-hidden pb-1 scroll-smooth px-8"
+            className="flex gap-2 sm:gap-3 overflow-x-hidden pb-1 scroll-smooth px-6 sm:px-8"
           >
             {matches.length > 0 ? (
               matches.map((match) => <MatchCard key={match.id} match={match} />)
@@ -793,12 +818,12 @@ export default function TransferMarket() {
                 container.scrollLeft += 300;
               }
             }}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-l-lg p-2 z-10"
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-l-lg p-1.5 sm:p-2 z-10"
             aria-label="Scroll right"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
+              className="h-4 w-4 sm:h-5 sm:w-5"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -813,35 +838,35 @@ export default function TransferMarket() {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-y-auto">
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
         {/* Left Side - Filters and Player List */}
-        <div className="w-1/2 h-full overflow-y-auto p-6 bg-gray-50">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Transfer Market</h1>
+        <div className="w-full lg:w-1/2 h-full max-h-screen overflow-y-auto p-3 sm:p-4 md:p-6 bg-gray-50">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-0">Transfer Market</h1>
             <button
               onClick={() => router.push("/")}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
             >
               <span>←</span> Back to Home
             </button>
           </div>
 
           {/* Stats Card - More Compact with Transfers Remaining */}
-          <div className="bg-white rounded-lg shadow-sm p-3 mb-4 flex justify-between">
-            <div className="flex items-center gap-2">
-              <div className="text-xs text-gray-500">Budget Remaining</div>
-              <div className="text-lg font-bold text-green-600">
+          <div className="bg-white rounded-lg shadow-sm p-3 mb-4 flex flex-wrap gap-2 sm:gap-0 sm:justify-between">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <div className="text-xs text-gray-500">Budget</div>
+              <div className="text-sm sm:text-lg font-bold text-green-600">
                 {(100 - totalTeamPrice).toFixed(1)}M
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="text-xs text-gray-500">Players Selected</div>
-              <div className="text-lg font-bold">{selectedPlayers.length}/11</div>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <div className="text-xs text-gray-500">Players</div>
+              <div className="text-sm sm:text-lg font-bold">{selectedPlayers.length}/11</div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="text-xs text-gray-500">Transfers Remaining</div>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <div className="text-xs text-gray-500">Transfers</div>
               <div
-                className={`text-lg font-bold ${
+                className={`text-sm sm:text-lg font-bold ${
                   transfersDisabled
                     ? "text-red-600"
                     : transfersRemaining === "unlimited"
@@ -856,10 +881,10 @@ export default function TransferMarket() {
 
           {/* Transfer limit warning if disabled */}
           {transfersDisabled && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-red-700 flex items-center">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-2 sm:p-3 mb-4 text-red-700 flex items-center text-xs sm:text-sm">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2"
+                className="h-4 w-4 sm:h-5 sm:w-5 mr-2"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -876,18 +901,18 @@ export default function TransferMarket() {
           )}
 
           {/* Filters Section */}
-          <div className="space-y-4 mb-4">
+          <div className="space-y-3 sm:space-y-4 mb-4">
             <input
               type="text"
               placeholder="Search player name..."
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 sm:px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               value={filters.searchQuery}
               onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <select
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 value={filters.country}
                 onChange={(e) => setFilters({ ...filters, country: e.target.value })}
               >
@@ -897,7 +922,7 @@ export default function TransferMarket() {
               </select>
 
               <select
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 sm:px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 value={filters.team}
                 onChange={(e) => setFilters({ ...filters, team: e.target.value })}
               >
@@ -913,10 +938,12 @@ export default function TransferMarket() {
             {/* Price Range Filter */}
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">
+                <span className="text-xs sm:text-sm font-medium">
                   Price Range: {filters.minPrice}M - {filters.maxPrice}M
                 </span>
-                <span className="text-sm text-gray-500">Avg: {priceStats.avg.toFixed(1)}M</span>
+                <span className="text-xs sm:text-sm text-gray-500">
+                  Avg: {priceStats.avg.toFixed(1)}M
+                </span>
               </div>
               <div className="relative h-2 bg-gray-200 rounded-full">
                 <div
@@ -958,11 +985,11 @@ export default function TransferMarket() {
             </div>
 
             {/* Role Selection Tabs */}
-            <div className="mt-4">
-              <div className="flex border-b border-gray-200">
+            <div className="mt-3 sm:mt-4">
+              <div className="flex flex-wrap sm:flex-nowrap border-b border-gray-200">
                 <button
                   onClick={() => setFilters({ ...filters, role: "WK-Batter" })}
-                  className={`flex-1 py-2 px-4 text-center border-b-2 ${
+                  className={`flex-1 py-1.5 sm:py-2 px-2 sm:px-4 text-center border-b-2 text-xs sm:text-sm ${
                     filters.role === "WK-Batter"
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent"
@@ -974,7 +1001,7 @@ export default function TransferMarket() {
                 </button>
                 <button
                   onClick={() => setFilters({ ...filters, role: "Batter" })}
-                  className={`flex-1 py-2 px-4 text-center border-b-2 ${
+                  className={`flex-1 py-1.5 sm:py-2 px-2 sm:px-4 text-center border-b-2 text-xs sm:text-sm ${
                     filters.role === "Batter"
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent"
@@ -986,49 +1013,49 @@ export default function TransferMarket() {
                 </button>
                 <button
                   onClick={() => setFilters({ ...filters, role: "Batting Allrounder" })}
-                  className={`flex-1 py-2 px-4 text-center border-b-2 ${
+                  className={`flex-1 py-1.5 sm:py-2 px-2 sm:px-4 text-center border-b-2 text-xs sm:text-sm ${
                     filters.role === "Batting Allrounder"
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent"
                   }`}
                 >
                   <div className="font-medium">
-                    BAT-AR (
+                    BA (
                     {selectedPlayers.filter((p) => p.Player_Role === "Batting Allrounder").length})
                   </div>
                 </button>
                 <button
                   onClick={() => setFilters({ ...filters, role: "Bowling Allrounder" })}
-                  className={`flex-1 py-2 px-4 text-center border-b-2 ${
+                  className={`flex-1 py-1.5 sm:py-2 px-2 sm:px-4 text-center border-b-2 text-xs sm:text-sm ${
                     filters.role === "Bowling Allrounder"
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent"
                   }`}
                 >
                   <div className="font-medium">
-                    BOWL-AR (
+                    BO (
                     {selectedPlayers.filter((p) => p.Player_Role === "Bowling Allrounder").length})
                   </div>
                 </button>
                 <button
                   onClick={() => setFilters({ ...filters, role: "Bowler" })}
-                  className={`flex-1 py-2 px-4 text-center border-b-2 ${
+                  className={`flex-1 py-1.5 sm:py-2 px-2 sm:px-4 text-center border-b-2 text-xs sm:text-sm ${
                     filters.role === "Bowler"
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent"
                   }`}
                 >
                   <div className="font-medium">
-                    BOWL ({selectedPlayers.filter((p) => p.Player_Role === "Bowler").length})
+                    BL ({selectedPlayers.filter((p) => p.Player_Role === "Bowler").length})
                   </div>
                 </button>
               </div>
 
               {/* Role Selection Rules */}
-              <div className="bg-gray-50 p-3 mt-2 rounded-lg text-sm text-gray-600 flex items-center">
+              <div className="bg-gray-50 p-2 sm:p-3 mt-2 rounded-lg text-xs sm:text-sm text-gray-600 flex items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2 text-blue-500"
+                  className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-blue-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -1040,64 +1067,72 @@ export default function TransferMarket() {
                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                {filters.role === "WK-Batter" && "Pick 1-4 Wicket-Keepers"}
-                {filters.role === "Batter" && "Pick 3-6 Batters"}
-                {filters.role === "Batting Allrounder" && "Pick 1-4 Batting All-rounders"}
-                {filters.role === "Bowling Allrounder" && "Pick 1-4 Bowling All-rounders"}
-                {filters.role === "Bowler" && "Pick 3-6 Bowlers"}
-                {!filters.role && "Select a role tab to see selection rules"}
+                <span className="text-xs sm:text-sm">
+                  {filters.role === "WK-Batter" && "Pick 1-4 Wicket-Keepers"}
+                  {filters.role === "Batter" && "Pick 3-6 Batters"}
+                  {filters.role === "Batting Allrounder" && "Pick 1-4 Batting All-rounders"}
+                  {filters.role === "Bowling Allrounder" && "Pick 1-4 Bowling All-rounders"}
+                  {filters.role === "Bowler" && "Pick 3-6 Bowlers"}
+                  {!filters.role && "Select a role tab to see selection rules"}
+                </span>
               </div>
             </div>
           </div>
 
           {/* Available Players List */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {groupPlayersByRole(filteredPlayers).map(([role, players]) => (
-              <div key={role} className="bg-white rounded-xl shadow-sm p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-semibold text-lg">{role}</h3>
-                  <span className="text-sm bg-blue-50 px-3 py-1 rounded-full text-blue-600">
+              <div key={role} className="bg-white rounded-xl shadow-sm p-3 sm:p-4">
+                <div className="flex justify-between items-center mb-3 sm:mb-4">
+                  <h3 className="font-semibold text-base sm:text-lg">{role}</h3>
+                  <span className="text-xs sm:text-sm bg-blue-50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-blue-600">
                     {players.length} available
                   </span>
                 </div>
-                <div className="grid gap-4">
+                <div className="grid gap-2 sm:gap-4">
                   {players.map((player) => (
                     <div
                       key={`available-${player.Player_ID}`}
-                      className="p-4 border border-gray-100 rounded-lg hover:border-blue-200 transition-colors flex items-center"
+                      className="p-2 sm:p-4 border border-gray-100 rounded-lg hover:border-blue-200 transition-colors flex items-center"
                     >
-                      {/* Profile Image */}
+                      {/* Profile Image - hide on smallest screens */}
                       <img
                         src="/profile-placeholder.png"
                         alt={`${player.Player} profile`}
-                        className="w-10 h-10 rounded-full mr-4"
+                        className="hidden sm:block w-8 sm:w-10 h-8 sm:h-10 rounded-full mr-3 sm:mr-4"
                       />
 
                       <div className="flex-1">
-                        <div className="flex justify-between items-start mb-2">
+                        <div className="flex justify-between items-start mb-1 sm:mb-2">
                           <div>
                             <h3
-                              className="font-bold cursor-pointer hover:text-blue-600"
+                              className="font-bold text-sm sm:text-base cursor-pointer hover:text-blue-600"
                               onClick={() => setSelectedPlayerForModal(player)}
                             >
                               {player.Player}
-                              {player.Country !== "India" && <span className="ml-2">✈️</span>}
+                              {player.Country !== "India" && (
+                                <span className="ml-1 sm:ml-2">✈️</span>
+                              )}
                             </h3>
-                            <div className="text-sm text-gray-500 mt-1">{player.Team_Name}</div>
+                            <div className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
+                              {player.Team_Name}
+                            </div>
                             {/* Player Position */}
-                            <div className="text-sm text-gray-500">{player.Player_Role}</div>
+                            <div className="text-xs sm:text-sm text-gray-500">
+                              {player.Player_Role}
+                            </div>
                           </div>
                         </div>
                       </div>
 
                       {/* Price and "+" Icon */}
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm bg-green-50 px-3 py-1 mt-1 rounded-full text-green-600 font-medium mx-2">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <span className="text-xs sm:text-sm bg-green-50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-green-600 font-medium">
                           {player.Price?.toFixed(1)}M
                         </span>
                         <button
                           onClick={() => togglePlayerSelection(player)}
-                          className="text-blue-500 hover:text-blue-600 transition-colors text-2xl"
+                          className="text-blue-500 hover:text-blue-600 transition-colors text-xl sm:text-2xl"
                           disabled={
                             selectedPlayers.filter((p) => p.Country !== "India").length >= 4 &&
                             player.Country !== "India"
@@ -1115,18 +1150,20 @@ export default function TransferMarket() {
         </div>
 
         {/* Right Side - Cricket Pitch */}
-        <div className="w-1/2 h-full bg-gradient-to-br from-green-600 to-green-700 p-4">
+        <div className="w-full lg:w-1/2 h-[500px] lg:h-screen lg:max-h-screen bg-gradient-to-br from-green-600 to-green-700 p-3 sm:p-4 overflow-y-auto">
           {/* Smaller Selected Squad section */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 mb-3 flex justify-between items-center">
-            <h2 className="text-base font-bold text-white">Selected Squad</h2>
-            <div className="flex gap-4">
-              <div className="bg-white/20 rounded-lg px-3 py-1.5 flex items-center gap-2">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 sm:p-3 mb-2 sm:mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
+            <h2 className="text-sm sm:text-base font-bold text-white">Selected Squad</h2>
+            <div className="flex gap-2 sm:gap-4 w-full sm:w-auto">
+              <div className="bg-white/20 rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 flex-1 sm:flex-auto flex items-center gap-1 sm:gap-2">
                 <div className="text-xs text-white/70">Value:</div>
-                <div className="text-sm font-bold text-white">{totalTeamPrice.toFixed(1)}M</div>
+                <div className="text-xs sm:text-sm font-bold text-white">
+                  {totalTeamPrice.toFixed(1)}M
+                </div>
               </div>
-              <div className="bg-white/20 rounded-lg px-3 py-1.5 flex items-center gap-2">
+              <div className="bg-white/20 rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 flex-1 sm:flex-auto flex items-center gap-1 sm:gap-2">
                 <div className="text-xs text-white/70">Overseas:</div>
-                <div className="text-sm font-bold text-white">
+                <div className="text-xs sm:text-sm font-bold text-white">
                   {selectedPlayers.filter((p) => p.Country !== "India").length}/4
                 </div>
               </div>
@@ -1134,7 +1171,7 @@ export default function TransferMarket() {
           </div>
 
           {/* Enlarged Pitch View */}
-          <div className="relative w-full h-[calc(100%-3.5rem)] bg-gradient-to-b from-green-600 to-green-700 rounded-xl overflow-hidden">
+          <div className="relative w-full h-[calc(100%-2.5rem)] sm:h-[calc(100%-3.5rem)] min-h-[450px] lg:min-h-[600px] bg-gradient-to-b from-green-600 to-green-700 rounded-xl overflow-hidden">
             {/* Pitch markings */}
             <div className="absolute inset-0">
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[85%] h-[90%] rounded-full border-2 border-white/30" />
@@ -1142,11 +1179,11 @@ export default function TransferMarket() {
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-[80%] bg-green-800/20 border-2 border-white/30" />
             </div>
 
-            {/* Player Positions */}
+            {/* Player Positions - updated for better spacing */}
             <div className="absolute inset-0">
               {/* All batters in a single row */}
-              <div className="absolute top-[15%] left-0 w-full flex justify-center">
-                <div className="flex flex-wrap justify-center gap-3 max-w-[90%]">
+              <div className="absolute top-[12%] left-0 w-full flex justify-center">
+                <div className="flex flex-wrap justify-center gap-2 sm:gap-3 lg:gap-4 max-w-[95%] sm:max-w-[90%]">
                   {selectedPlayers
                     .filter((p) => p.Player_Role === "Batter")
                     .map((player) => (
@@ -1164,8 +1201,8 @@ export default function TransferMarket() {
               </div>
 
               {/* Wicket-keeper - closer to batters */}
-              <div className="absolute top-[36%] left-1/2 transform -translate-x-1/2">
-                <div className="flex justify-center gap-2">
+              <div className="absolute top-[35%] left-1/2 transform -translate-x-1/2">
+                <div className="flex justify-center gap-2 lg:gap-4">
                   {selectedPlayers
                     .filter((p) => p.Player_Role === "WK-Batter")
                     .map((player) => (
@@ -1183,8 +1220,8 @@ export default function TransferMarket() {
               </div>
 
               {/* All-rounders row */}
-              <div className="absolute top-[57%] left-0 w-full">
-                <div className="flex justify-center gap-4 max-w-full mx-auto">
+              <div className="absolute top-[58%] left-0 w-full">
+                <div className="flex justify-center gap-2 sm:gap-3 lg:gap-4 max-w-full mx-auto flex-wrap px-4">
                   {selectedPlayers
                     .filter(
                       (p) =>
@@ -1206,8 +1243,8 @@ export default function TransferMarket() {
               </div>
 
               {/* Bowlers row */}
-              <div className="absolute top-[78%] left-0 w-full">
-                <div className="flex justify-center flex-wrap gap-3 max-w-[90%] mx-auto">
+              <div className="absolute top-[80%] left-0 w-full">
+                <div className="flex justify-center flex-wrap gap-2 sm:gap-3 lg:gap-4 max-w-[95%] sm:max-w-[90%] mx-auto">
                   {selectedPlayers
                     .filter((p) => p.Player_Role === "Bowler")
                     .map((player) => (
@@ -1226,7 +1263,7 @@ export default function TransferMarket() {
             </div>
 
             {/* Role distribution overlay */}
-            <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-sm text-white p-4 rounded-xl text-sm space-y-1">
+            <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-black/70 backdrop-blur-sm text-white p-2 sm:p-4 rounded-xl text-xs sm:text-sm space-y-0.5 sm:space-y-1 z-10">
               <p>WK: {selectedPlayers.filter((p) => p.Player_Role === "WK-Batter").length}</p>
               <p>BAT: {selectedPlayers.filter((p) => p.Player_Role === "Batter").length}</p>
               <p>
@@ -1245,17 +1282,17 @@ export default function TransferMarket() {
             {/* Confirm button - with red transparent background */}
             <button
               onClick={confirmTeamSelection}
-              className={`absolute top-4 right-4 py-2 px-6 rounded-xl ${
+              className={`absolute top-2 sm:top-4 right-2 sm:right-4 py-1.5 sm:py-2 px-3 sm:px-6 rounded-lg sm:rounded-xl z-10 ${
                 selectedPlayers.length === 11
                   ? "bg-red-600/70 hover:bg-red-700/80 text-white"
                   : "bg-red-500/30 text-white/50 cursor-not-allowed"
-              } transition-colors backdrop-blur-sm flex items-center gap-2`}
+              } transition-colors backdrop-blur-sm flex items-center gap-1 sm:gap-2 text-xs sm:text-sm`}
               disabled={selectedPlayers.length !== 11 || isLoading}
             >
               {isLoading ? (
                 <>
                   <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    className="animate-spin -ml-1 mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 text-white"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
