@@ -233,7 +233,7 @@ export default function JoinLeague() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] text-center py-3 rounded-lg font-medium transition-all w-full disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-[#4ade80]/20 hover:bg-[#4ade80]/30 text-[#4ade80] text-sm md:text-base text-center py-3 rounded-lg font-medium transition-all w-full disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center justify-center">
@@ -247,7 +247,7 @@ export default function JoinLeague() {
           </form>
 
           <div className="mt-8 text-center">
-            <p className="text-gray-400">
+            <p className="text-sm md:text-base text-gray-400">
               Don't have a league code?{" "}
               <Link
                 href="/leagues/create"
